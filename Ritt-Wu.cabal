@@ -1,0 +1,62 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 4cc0561c5348e7e793df07bd56a8e30373c5664853c2f505a7cf6a1f9e64f2d0
+
+name:           Ritt-Wu
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/Ritt-Wu#readme>
+homepage:       https://github.com/githubuser/Ritt-Wu#readme
+bug-reports:    https://github.com/githubuser/Ritt-Wu/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/Ritt-Wu
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_Ritt_Wu
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable Ritt-Wu-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_Ritt_Wu
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Ritt-Wu
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+test-suite Ritt-Wu-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_Ritt_Wu
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Ritt-Wu
+    , base >=4.7 && <5
+  default-language: Haskell2010
