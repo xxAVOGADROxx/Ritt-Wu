@@ -11,7 +11,7 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/Ritt-Wu#readme>
 homepage:       https://github.com/githubuser/Ritt-Wu#readme
 bug-reports:    https://github.com/githubuser/Ritt-Wu/issues
-author:         Author name here
+author:         Jose Luis Seraquive Cuenca
 maintainer:     example@example.com
 copyright:      2019 Author name here
 license:        BSD3
@@ -59,4 +59,8 @@ test-suite Ritt-Wu-test
   build-depends:
       Ritt-Wu
     , base >=4.7 && <5
+    , tasty
+    , tasty-hunit
+    , tasty-quickcheck
+    , tasty-smallcheck
   default-language: Haskell2010
