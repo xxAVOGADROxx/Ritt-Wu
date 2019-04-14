@@ -1,6 +1,5 @@
 module Main where
-import Lib
-
+import Polynomial.Monomial
 
 main :: IO ()
 main = someFunc
