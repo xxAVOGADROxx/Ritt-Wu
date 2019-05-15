@@ -66,3 +66,4 @@ extra-deps:
   - sscript-0.1.0.2
   - massiv-0.3.0.1
   - scheduler-1.1.0
+  - algebra-4.3

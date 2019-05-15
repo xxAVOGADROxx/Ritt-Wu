@@ -1,4 +1,4 @@
-
+{-# LANGUAGE MultiParamTypeClasses, TypeFamilies #-}
 {-|
 -- Module      : Data.Massiv.Array
 -- Copyright   :
@@ -12,7 +12,7 @@
 module Polynomial.Monomial
     (
       -- * Types
-      MonArray,
+      MonArray(..),
       -- * Classes
       IsMonomialOrder,
       -- * Functions
@@ -21,14 +21,15 @@ module Polynomial.Monomial
     where
 import Data.Massiv.Array as A
 import Data.Char.SScript
-import Prelude hiding (lex)
+import Prelude hiding (lex, (*))
 import Data.Function
+import Numeric.Algebra hiding ((>),(+))
 
 -- | MonAarray is a list of coefficient and an monomial order to use in the polynomial definition
 newtype MonArray ord = MonArray {getMon :: Array P Ix1 Int} deriving (Eq)
 
-data  Lex = Lex       -- ^Just the datatype for Lex ordering
-data Revlex = Revlex -- ^Just the datatype for Revlex ordering
+data  Lex        -- ^Just the datatype for Lex ordering
+data Revlex  -- ^Just the datatype for Revlex ordering
 
 -- << Class Functions >>
 ----------------------------------------------------------------------------------------
@@ -46,19 +47,20 @@ instance (IsMonomialOrder ord) => Ord (MonArray ord) where
    compare = compareMonArray
 
 instance IsMonomialOrder Lex where
-  compareMonArray m n = (lex `on` (toList . getMon)) m n
+  compareMonArray = (lex `on` (toList . getMon))
 
 
 instance IsMonomialOrder Revlex where
- compareMonArray m n = (revlex `on` (toList . getMon)) m n
+  compareMonArray = (revlex `on` (toList . getMon))
 
-
+instance (IsMonomialOrder ord ) => Multiplicative (MonArray ord) where
+  (*) = productMonArray
 ---------------------------------------------------------------------------------------
 
 -- <<Functions>>
 -- |The 'mon' function creates a monomial since an integer array
-mon :: [Int]  -> MonArray Lex
-mon values = MonArray (makeVectorR P Seq (Sz $ length values) (\x -> values !! x))
+mon :: (IsMonomialOrder ord) => [Int] -> MonArray ord
+mon values = MonArray $ makeVectorR P Par (Sz $ length values) (\x -> values !! x)
 
 -- mon version of list
 -- mon ::  [[Int]]  -> MonArray ord
@@ -106,3 +108,6 @@ revlex x y
     where
         (xr:xrs) = reverse x
         (yr:yrs) = reverse y
+---------------------------------------------------------------------------------------
+productMonArray :: (IsMonomialOrder ord) => MonArray ord -> MonArray ord -> MonArray ord
+productMonArray xs xz = mon ( on (Prelude.zipWith (+))  (toList . getMon) xs xz)
