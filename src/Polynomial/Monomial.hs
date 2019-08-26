@@ -1,4 +1,8 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-|
 -- Module      : Data.Massiv.Array
 -- Copyright   :
@@ -9,105 +13,87 @@
 
 -}
 
+
 module Polynomial.Monomial
-    (
-      -- * Types
-      MonArray(..),
-      -- * Classes
-      IsMonomialOrder,
-      -- * Functions
-      mon
-    )
-    where
+   -- * Types
+  ( Monomial(..),
+   OrderMon(..),
+    -- * Classes
+    MonomialOrder,
+    -- *Functions
+    makeMon,
+    multMon
+ )
+where
 import Data.Massiv.Array as A
+import Prelude as P hiding ((*))
 import Data.Char.SScript
-import Prelude hiding (lex, (*))
+import Numeric.Algebra as N
 import Data.Function
-import Numeric.Algebra hiding ((>),(+))
-
--- | MonAarray is a list of coefficient and an monomial order to use in the polynomial definition
-newtype MonArray ord = MonArray {getMon :: Array P Ix1 Int} deriving (Eq)
-
-data  Lex        -- ^Just the datatype for Lex ordering
-data Revlex  -- ^Just the datatype for Revlex ordering
-
--- << Class Functions >>
-----------------------------------------------------------------------------------------
--- | Definition of what a monomial order must meet
-class IsMonomialOrder ord where
-    -- | Monomial order (of degree n). This should satisfy the following methods
-  compareMonArray :: MonArray ord -> MonArray ord  -> Ordering
----------------------------------------------------------------------------------------
-
--- <<Instances>>
-instance Show (MonArray ord ) where
-  show monomial = formatSS $ showMonArray ( getMon monomial) 0
-
-instance (IsMonomialOrder ord) => Ord (MonArray ord) where
-   compare = compareMonArray
-
-instance IsMonomialOrder Lex where
-  compareMonArray = (lex `on` (toList . getMon))
+import Criterion.Main
 
 
-instance IsMonomialOrder Revlex where
-  compareMonArray = (revlex `on` (toList . getMon))
+newtype Monomial (ord :: OrderMon) t =
+  Monomial
+    { -- | mon is and vector of coefficient and exponent of a given monomial
+      mon :: Array D Ix1 t
+    }
 
-instance (IsMonomialOrder ord ) => Multiplicative (MonArray ord) where
-  (*) = productMonArray
----------------------------------------------------------------------------------------
+data OrderMon =
+  -- | Lexicographic order
+   Lex
+  -- | Reverse lexicographic order
+  | Revlex
 
--- <<Functions>>
--- |The 'mon' function creates a monomial since an integer array
-mon :: (IsMonomialOrder ord) => [Int] -> MonArray ord
-mon values = MonArray $ makeVectorR P Par (Sz $ length values) (\x -> values !! x)
 
--- mon version of list
--- mon ::  [[Int]]  -> MonArray ord
--- mon values = MonArray $ fromLists' Par values
+-- |
+-- = Class
+--
+class MonomialOrder ord t where
+  compareM :: Monomial ord t -> Monomial ord t -> Ordering
 
----------------------------------------------------------------------------------------
-showMonArray :: Array P Ix1 Int -> Int -> String
-showMonArray monomial n
-  | n  == elemsCount monomial = "\n" ++ show monomial
-  | degree == 0 = next
-  | otherwise = "x_{" ++ show n ++ "}^{" ++ show degree ++ "}" ++ next
+
+instance (Eq t, Num t, Show t) => Show (Monomial ord t ) where
+  show m = formatSS $ showMon (toList (mon m)) 0
+
+
+instance (Num t) => Multiplicative (Monomial ord t ) where
+  (*) = multMon
+
+instance (Num t) => Additive (Monomial ord t) where
+  (+) = undefined
+-- |
+-- = Functions
+--
+multMon :: (Num t) => Monomial ord t -> Monomial ord t -> Monomial ord t
+multMon xs xz = Monomial $ on (A.zipWith (P.+)) ( aux . mon)  xs xz
+
+aux :: (Num t) => Array D Ix1 t -> Array D Ix1 t
+aux xs = extract' 1 (Sz $ elemsCount xs P.- 1) xs 
+
+
+showMon :: (Eq k, Show k, Num k) =>[k] -> Int -> String
+showMon  (x:xs) s
+  | null xs = format
+  | x == 0 = printMon
+  | s == 0 = show x ++ printMon
+  | otherwise = format  ++ printMon
   where
-    degree  =  monomial !> n
-    next = showMonArray monomial (n+1)
+    next = succ
+    format = "x_{" ++ show  s ++ "}^{" ++ show x ++ "}"
+    printMon = showMon xs (next s)
 
--- function  for the instance show (array)
--- showMonArray :: Array P Ix2 Int -> Int -> String
--- showMonArray monomial x
---   | x  == div (elemsCount monomial) 2 = "\n"
---   | degree == 0 = next
---   | otherwise = "x_{" ++ show var ++ "}^{" ++ show degree ++ "}" ++ next
---   where
---     var  =  monomial ! x :. 0
---     degree  =   monomial ! x :. 1
---     next = showMonArray monomial (x+1)
----------------------------------------------------------------------------------------
 
-lex :: [Ix1] -> [Ix1] -> Ordering
-lex [] [] = EQ
-lex [] _ = LT
-lex _ [] = GT
-lex (x:xs) (y:ys)
-    |  x==y = lex xs ys
-    | x > y = GT
-    | otherwise = LT
----------------------------------------------------------------------------------------
-revlex :: [Ix1] -> [Ix1] -> Ordering
-revlex [] [] = EQ
-revlex [] _ = LT
-revlex _ [] = GT
-revlex x y
-    | (xr == 0 && yr == 0) || xr==yr = revlex (reverse xrs) (reverse yrs)
-    | xr > yr = GT
-    | otherwise = LT
-    where
-        (xr:xrs) = reverse x
-        (yr:yrs) = reverse y
----------------------------------------------------------------------------------------
-productMonArray :: (IsMonomialOrder ord) => MonArray ord -> MonArray ord -> MonArray ord
-productMonArray xs xz = mon ( on (Prelude.zipWith (+))  (toList . getMon) xs xz)
+makeMon :: (Num t ) => [t] -> Monomial a t
+makeMon xs = Monomial $ makeVectorR D Par (Sz $ length xs) (xs !!)
+
+
+-- :set -XDataKinds
+--getComp
+--setComp
+-- >>> size
+-- convert
+
+
+
+
