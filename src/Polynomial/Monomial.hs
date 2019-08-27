@@ -36,7 +36,7 @@ import Criterion.Main
 newtype Monomial (ord :: OrderMon) t =
   Monomial
     { -- | mon is and vector of coefficient and exponent of a given monomial
-      mon :: Array D Ix1 t
+      getM :: (t ,Array D Ix1 t) -- a tupla that contains the coefficient k and the array of exponents
     }
 
 data OrderMon =
@@ -54,10 +54,10 @@ class MonomialOrder ord t where
 
 
 instance (Eq t, Num t, Show t) => Show (Monomial ord t ) where
-  show m = formatSS $ showMon (toList (mon m)) 0
+  show m = show (fst $ getM m) ++ (formatSS $ showMon (toList (snd $ getM m)) 0)
 
 
-instance (Num t) => Multiplicative (Monomial ord t ) where
+instance (Num t, Multiplicative t) => Multiplicative (Monomial ord t ) where
   (*) = multMon
 
 instance (Num t) => Additive (Monomial ord t) where
@@ -65,18 +65,14 @@ instance (Num t) => Additive (Monomial ord t) where
 -- |
 -- = Functions
 --
-multMon :: (Num t) => Monomial ord t -> Monomial ord t -> Monomial ord t
-multMon xs xz = Monomial $ on (A.zipWith (P.+)) ( aux . mon)  xs xz
-
-aux :: (Num t) => Array D Ix1 t -> Array D Ix1 t
-aux xs = extract' 1 (Sz $ elemsCount xs P.- 1) xs 
+multMon :: (Num t, Multiplicative t) => Monomial ord t -> Monomial ord t -> Monomial ord t
+multMon xs xz = Monomial $ ( on (N.*) (fst . getM) xs xz,  (on (A.liftArray2 (P.+)) (snd . getM) xs xz))
 
 
 showMon :: (Eq k, Show k, Num k) =>[k] -> Int -> String
 showMon  (x:xs) s
   | null xs = format
   | x == 0 = printMon
-  | s == 0 = show x ++ printMon
   | otherwise = format  ++ printMon
   where
     next = succ
@@ -84,16 +80,25 @@ showMon  (x:xs) s
     printMon = showMon xs (next s)
 
 
-makeMon :: (Num t ) => [t] -> Monomial a t
-makeMon xs = Monomial $ makeVectorR D Par (Sz $ length xs) (xs !!)
+makeMon :: (Num t ) => t -> [t] -> Monomial ord t
+makeMon k xs = Monomial $ (k , makeVectorR D Par (Sz $ length xs) (xs !!))
 
 
 -- :set -XDataKinds
 --getComp
 --setComp
 -- >>> size
--- convert
+-- convertAs
 
-
-
-
+--  evaluateM -> allows to get values from delayed arrays
+-- evaluate' -> Similar to evaluateM, but will throw an exception in pure code.
+-- liftArray2 -> Similar to zipWith, except dimensions of both arrays either have to be the same, or at least one of the two array must be a singleton array, in which case it will behave as a map.
+-- minimuM
+--maximumM
+-- all -> Determines whether all element of the array satisfy the predicate.
+-- any ->  Determines whether any element of the array satisfies the predicate.
+-- foldlS -> (sequential ?)
+--  extractFromToM  #########################
+-- unconsM -> Take one element off the vector from the left side. 
+newtype Exp = Exp {getf :: (Int, Array D Ix1 Ix1)}
+-- la solucion es poder representarlo como tupla, la funcion unconsM no puede ser aplicado las funciones de tupla

@@ -19,7 +19,7 @@ main = do
       "monMul1"
         [
           bench "whnf" $ whnf ((*) x) y
-        , bench "nf" $ nf ((*) x) y
+        , bench "nf" $ whnf ((*) x) y
         ]
     -- , bgroup "monMul2" [bench "massiv whnf" $ whnf (auxiliar x) y ]
     ]
