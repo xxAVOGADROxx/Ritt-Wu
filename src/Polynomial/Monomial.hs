@@ -1,4 +1,8 @@
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE CPP              #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures   #-}
+{-# LANGUAGE RecordWildCards  #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 
 {-|
 -- Module      : Data.Massiv.Array
@@ -66,8 +70,26 @@ instance Division (Monomial ord) where
 instance Additive (Monomial ord) where
   (+) = addMon
 
--- instance Multiplicative (Monomial ord) where
---   (-) = undefined
+--class (LeftModule Integer r, RightModule Integer r, Monoidal r) => Group r where
+
+instance Semiring (Monomial ord)
+instance Abelian (Monomial ord)
+instance Monoidal (Monomial ord) where
+  zero = undefined
+instance LeftModule Integer (Monomial ord)  where
+  (.*) = undefined
+instance RightModule Integer (Monomial ord)  where
+  (*.) = undefined
+instance LeftModule Natural (Monomial ord) where
+  (.*) = undefined
+instance RightModule Natural (Monomial ord) where
+  (*.) = undefined
+
+instance Group (Monomial ord) where
+  (-) = subMon
+
+subMon :: Monomial ord -> Monomial ord -> Monomial ord
+subMon xs xz = Monomial $ on (verificationMl) (getMon ) xs xz
 
 instance Unital (Monomial ord ) where
   one = Monomial $ empty
