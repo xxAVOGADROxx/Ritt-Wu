@@ -1,8 +1,11 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE KindSignatures   #-}
-{-# LANGUAGE RecordWildCards  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 {-|
 -- Module      : Data.Massiv.Array
@@ -25,6 +28,7 @@ module Polynomial.Monomial
     -- * Classes
    IsOrderMon(..),
     -- * Functions
+   NFData(..),
    m,
    multMon,
    divMon,
@@ -36,7 +40,8 @@ import Prelude as P
 import Data.Char.SScript
 import Numeric.Algebra as N
 import Data.Function
-
+import Control.DeepSeq
+--import GHC.Generics (Generic, Generic1)
 
 
 -- | array monomial with representation r
@@ -47,14 +52,14 @@ type Mon   = Array D Ix1 Double
 newtype Monomial ord =
   Monomial
     { getMon :: Mon
-    } deriving (Eq)
+    }  deriving (Eq)
 
 
 m :: [Double] -> Monomial ord
 m xs = Monomial $ makeVectorR D Par (Sz $ length xs) (xs !!)
 
 totalDegree ::   Monomial ord  -> Double
-totalDegree = (A.sum . getMon )
+totalDegree = A.sum . getMon 
 {-# INLINE totalDegree #-}
 
 
@@ -88,14 +93,20 @@ instance RightModule Natural (Monomial ord) where
 instance Group (Monomial ord) where
   (-) = subMon
 
+instance NFData (Monomial ord) where
+  rnf x = seq x () -- sujeto a revision cunado se realize la diviision
+                  -- polynomial, delay es el mas optimo porque no se realizan
+                  -- operaciones "estrictas sobre los monomios"
+          -- si seq evalua sequencial es correcto (verificar)
+
 subMon :: Monomial ord -> Monomial ord -> Monomial ord
-subMon xs xz = Monomial $ on (verificationMl) (getMon ) xs xz
+subMon xs xz = Monomial $ on verificationMl getMon xs xz
 
 instance Unital (Monomial ord ) where
-  one = Monomial $ empty
+  one = Monomial empty
 
 addMon :: Monomial ord -> Monomial ord -> Monomial ord
-addMon xs xz =  Monomial $ on (verificationMl) (getMon ) xs xz
+addMon xs xz =  Monomial $ on verificationMl (getMon ) xs xz
 
 verificationMl :: Array D Ix1 Double -> Array D Ix1 Double -> Array D Ix1 Double
 verificationMl xs xz
@@ -162,3 +173,5 @@ revlex' x y
   where
     (xr:xrs) = reverse x
     (yr:yrs) = reverse y
+
+-- >>> m[]

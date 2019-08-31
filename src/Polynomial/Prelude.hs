@@ -6,7 +6,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Polynomial.Prelude where
+module Polynomial.Prelude(
+  -- * Types
+  Polynomial(..),
+  
+                         ) where
 import Prelude as P
 import Polynomial.Monomial
 import Numeric.Algebra as N
@@ -106,3 +110,7 @@ addPol xs xz = Polynomial $ on addPol' getPol xs xz
 addPol' ::
      (Num k) => (k, Monomial ord) -> (k, Monomial ord) -> (k, Monomial ord)
 addPol' (a, b) (c, d) = (a P.+ c, b N.+ d)
+
+
+
+

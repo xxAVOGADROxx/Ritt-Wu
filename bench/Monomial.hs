@@ -1,28 +1,28 @@
--- {-# LANGUAGE FlexibleInstances #-}
--- {-# LANGUAGE DataKinds             #-}
--- {-# LANGUAGE FlexibleContexts      #-}
--- {-# LANGUAGE KindSignatures        #-}
--- {-# LANGUAGE MultiParamTypeClasses #-}
--- module Main where
+module Main where
+import Criterion.Main
+import Prelude as P
+import Numeric.Algebra as N
+import Polynomial.Monomial
+--import Polynomial.Prelude
 
--- import Criterion.Main
--- import Prelude as P hiding ((*))
--- import Polynomial.Monomial
--- import Numeric.Algebra -- In this library we define the multiplicative instance
 
--- main :: IO ()
--- main = do
---   let x = makeMon 100 [1 .. 10000] :: Monomial 'Lex Int
---       y = makeMon 100 [10000 .. 20000] :: Monomial 'Lex Int
---       z = [1..10000]
---       p = [10000 .. 20000]
+main :: IO ()
+main = do
+  let x = m [1 .. 10000] :: Monomial Lex 
+      y = m [10000 .. 19999] :: Monomial Lex
+      z = [1..10000] :: [Double]
+      p = [10000 .. 19999] :: [Double]
 
---   defaultMain
---     [ bgroup
---       "monMul1 -  Massive"
---         [bench "whnf" $ whnf ((*) x) y]
---     , bgroup
---       "monMul2 - Traditional"
---       [bench "traditional whnf" $ whnf ((zipWith (P.+)) z) p]
---     ]
---     -- 
+  defaultMain
+
+    [ bgroup
+      "Monomial * - Massive"
+        [bench "whnf" $ whnf ((N.*) x) y
+        ,bench "nf" $ nf ((N.*) x) y]
+    , bgroup
+      "Monomial *  - Traditional"
+      [bench  "nf" $ nf ((zipWith (P.+)) z) p
+      ,bench "whnf" $ whnf ((zipWith (P.+)) z) p ]
+    ]
+
+
