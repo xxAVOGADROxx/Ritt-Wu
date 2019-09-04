@@ -3,6 +3,7 @@ import Criterion.Main
 import Prelude as P
 import Numeric.Algebra as N
 import Polynomial.Monomial
+import Control.DeepSeq
 --import Polynomial.Prelude
 
 
@@ -16,13 +17,19 @@ main = do
   defaultMain
 
     [ bgroup
-      "Monomial * - Massive"
+      "Multiplication"
+      [bgroup
+        "MonomialM"
         [bench "whnf" $ whnf ((N.*) x) y
-        ,bench "nf" $ nf ((N.*) x) y]
-    , bgroup
-      "Monomial *  - Traditional"
-      [bench  "nf" $ nf ((zipWith (P.+)) z) p
-      ,bench "whnf" $ whnf ((zipWith (P.+)) z) p ]
+        ,bench "nf" $ nf force (((N.*) x) y)
+        ,bench "nf-force" $ nf force (((N.*) x) y)
+        ]
+      ,bgroup
+        "MonomialT"
+        [bench  "nf" $ nf ((zipWith (P.+)) z) p --260ns
+        ,bench  "nf-force" $ nf force (((zipWith (P.+)) z) p) --79ns
+        ,bench "whnf" $ whnf ((zipWith (P.+)) z) p ]
+      ]
     ]
 
 

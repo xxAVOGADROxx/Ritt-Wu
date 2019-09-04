@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
                   Polynomial.Monomial
-                  Polynomial.Prelude
+                  Polynomial.Exponent
   other-modules:
       Paths_Ritt_Wu
   hs-source-dirs:
