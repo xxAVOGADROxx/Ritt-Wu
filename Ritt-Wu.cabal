@@ -34,11 +34,12 @@ library
   hs-source-dirs:
       src
   build-depends:
-                    base >=4.7 && <5
+                      base >=4.7 && <5
                 , algebra -any
                 , criterion -any
                 , deepseq >= 1.4.4.0
                 , massiv == 0.4.0.0
+                , scheduler >= 1.4.2
                 , sscript -any
   default-language: Haskell2010
 
@@ -50,12 +51,13 @@ executable Ritt-Wu-exe
       app
   ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
-                    Ritt-Wu
+                      Ritt-Wu
                 , algebra
                 , base >=4.7 && <5
                 , criterion
                 , deepseq >= 1.4.4.0
                 , massiv
+                , scheduler >= 1.4.2
                 , sscript
   default-language: Haskell2010
 
@@ -68,9 +70,10 @@ test-suite Ritt-Wu-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-                    Ritt-Wu
+                      Ritt-Wu
                 , base >=4.7 && <5
                 , deepseq >= 1.4.4.0
+                , scheduler >= 1.4.2
                 , tasty
                 , tasty-hunit
                 , tasty-quickcheck
@@ -85,12 +88,13 @@ benchmark Ritt-Wu-benchmark
       Paths_Ritt_Wu
  ghc-options:  -Wall -rtsopts -threaded -with-rtsopts=-N -freverse-errors -O2
  build-depends:
-                   Ritt-Wu
+                     Ritt-Wu
                , algebra
                , base >=4.7 && <5
                , criterion
                , deepseq >= 1.4.4.0
                , massiv
+               , scheduler >= 1.4.2
                , sscript
  default-language: Haskell2010
                                                     

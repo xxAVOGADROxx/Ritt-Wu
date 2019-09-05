@@ -20,11 +20,12 @@ module Polynomial.Exponent
   (
    -- * Types
    Exp(..),
+   ExpA(..),
    --OrdMon(..),
    Lex(..),
    Revlex(..),
     -- * Classes
-   IsOrderMon(..),
+
     -- * Functions
    NFData(..),
    m,
@@ -60,18 +61,23 @@ m xs = Exp $ makeVectorR D Par (Sz $ length xs) (xs !!)
 
 -- Function that recive the x_i position with the corresponding exp
 
+-- | Monomial with position
 mp :: [Int] -> [Int] -> Exp ord
 mp xs xz
-  | xs == xz = undefined --throw $ 
-  | otherwise =  m $ mp' xs xz 0
+  | lxs /= lxz = throw $ SizeMismatchException (Sz lxs ) (Sz lxz)
+  | otherwise =  m $ mp' xs xz 1
+  where
+    lxs = length xs
+    lxz = length xz
 
 mp' :: [Int] -> [Int] -> Int -> [Int]
 mp' [] [] _ = []
 mp' (p:ps) (x:xs) n
-  | n /= p  = 0 : mp' (p:ps)(x:xs)next
-  | otherwise = x : mp'(ps)(xs)next
+  | p == 0 = [99999999] -- no se puede crear en la posicion 0 ya que la lista empieza en 1 
+  | n /= p = 0 : mp' (p : ps) (x : xs) next
+  | otherwise = x : mp' (ps) (xs) next
   where
-    next = n P.+1
+    next = n P.+ 1
 
 
 totalDegree ::   Exp ord  -> Int
@@ -80,7 +86,7 @@ totalDegree = A.sum . getExp
 
 
 instance  Show (Exp ord) where
-  show m = formatSS $ showMon (A.toList (getExp m)) 0
+  show m = formatSS $ showMon (A.toList (getExp m)) 1
 
 instance Multiplicative (Exp ord) where
   (*) = multMon
@@ -152,31 +158,25 @@ showMon (x:xs) s
 
 
 multMon ::  Exp ord  -> Exp ord  -> Exp ord
-multMon xs xz = Exp$ on (A.liftArray2 (P.+))getExp xs xz
+multMon xs xz = Exp $ on (A.liftArray2 (P.+)) getExp xs xz
 
-divMon ::  Exp ord  -> Exp ord  -> Exp ord
-divMon xs xz = Exp$ on (A.liftArray2 (P.-))getExp xs xz
+divMon :: Exp ord -> Exp ord -> Exp ord
+divMon xs xz = Exp $ on (A.liftArray2 (P.-)) getExp xs xz
 
 -- * Names for orderings.
 --   We didn't choose to define one single type for ordering names for the extensibility.
 -- | Lexicographical order
-
---data OrdMon = Lex | Revlex
 data Lex = Lex
+-- | Reverse lexicographical order
 data Revlex = Revlex
-------------------------------------------------------------------------------------------------------------
-class IsOrderMon ord  where
-  compMon :: Exp ord  -> Exp ord -> Ordering
 
+instance Ord (Exp Revlex) where
+  compare = on revlex' (toList . getExp)
 
-instance IsOrderMon Lex where
-    compMon = on lex' (toList . getExp)
-
-instance IsOrderMon Revlex where
-    compMon = on revlex' (toList . getExp)
-
-instance (IsOrderMon ord) => Ord (Exp ord) where
-    compare = undefined -- compareExponents
+instance Ord (Exp Lex) where
+  compare = on lex' (toList . getExp)
+  (>) = on (P.>) (toList . getExp)
+  (<) = on (P.<) (toList . getExp)
 
 
 lex' :: (Num a, Eq a, Ord a) => [a] -> [a] -> Ordering

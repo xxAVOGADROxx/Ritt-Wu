@@ -9,8 +9,7 @@
 module Polynomial.Monomial(
   -- * Types
   Mon(..),
-  
-  
+
                          ) where
 import Prelude as P
 import Polynomial.Exponent
@@ -27,13 +26,13 @@ instance (DecidableZero r, Ring r, Commutative r, Eq r) => CoeffRing r
 
 newtype Mon k ord =
   Mon
-    { getPol :: (k , Exp ord)
+    { getMon :: (k , Exp ord)
     } --deriving (Eq)
 
 -- class (Unital k, Show k, Eq k) => PolyContext k
 
 instance ( Show k, Eq k) => Show (Mon k Lex) where
- show xs =  showPol  [getPol xs]
+ show xs =  showPol  [getMon xs]
 
 showPol :: (Show k, Eq k) => [(k, Exp ord)] -> String
 showPol [] = " " --este caso nunca se dara en la instancia show
@@ -53,18 +52,18 @@ class (CoeffRing (Coefficient poly)) =>
 
 
 
-class ( IsMonomial poly, IsOrderMon (MonOrder poly)) =>
-      IsOrderedMonomial poly
-  where
-  type MonOrder poly :: *
+-- class ( IsMonomial poly, IsOrderMon (MonOrder poly)) =>
+--       IsOrderedMonomial poly
+--   where
+--   type MonOrder poly :: *
 
--------------------------------------------------------------------
-instance (IsOrderMon ord, CoeffRing k) => IsMonomial (Mon k ord) where
-  type Coefficient (Mon k ord) = k
+-- -------------------------------------------------------------------
+-- instance (IsOrderMon ord, CoeffRing k) => IsMonomial (Mon k ord) where
+--   type Coefficient (Mon k ord) = k
 
-instance (CoeffRing k, IsOrderMon ord) =>
-         IsOrderedMonomial (Mon k ord) where
-  type MonOrder (Mon k ord) = ord
+-- instance (CoeffRing k, IsOrderMon ord) =>
+--          IsOrderedMonomial (Mon k ord) where
+--   type MonOrder (Mon k ord) = ord
 
 instance (Num k) => Additive (Mon k ord) where
   (+) = addPol
@@ -98,22 +97,23 @@ instance NFData (Mon k ord) where
   rnf x = seq x ()
 
 
+
 subPol :: (Num k) => Mon k ord -> Mon k ord -> Mon k ord
-subPol xs xz = Mon $ on subPol' getPol xs xz
+subPol xs xz = Mon $ on subPol' getMon xs xz
 
 subPol' ::
      (Num k) => (k, Exp ord) -> (k, Exp ord) -> (k, Exp ord)
 subPol' (a, b) (c, d) = (a P.- c, b N.- d)
 
 multPol :: (Num k) => Mon k ord -> Mon k ord -> Mon k ord
-multPol xs xz = Mon $ on multPol' getPol xs xz
+multPol xs xz = Mon $ on multPol' getMon xs xz
 
 multPol' ::
      (Num k) => (k, Exp ord) -> (k, Exp ord) -> (k, Exp ord)
 multPol' (a, b) (c, d) = (a P.* c, b N.* d)
 
 addPol :: (Num k) => Mon k ord -> Mon k ord -> Mon k ord
-addPol xs xz = Mon $ on addPol' getPol xs xz
+addPol xs xz = Mon $ on addPol' getMon xs xz
 
 addPol' ::
      (Num k) => (k, Exp ord) -> (k, Exp ord) -> (k, Exp ord)
