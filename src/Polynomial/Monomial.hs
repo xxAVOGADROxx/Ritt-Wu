@@ -27,7 +27,7 @@ instance (DecidableZero r, Ring r, Commutative r, Eq r) => CoeffRing r
 newtype Mon k ord =
   Mon
     { getMon :: (k , Exp ord)
-    } --deriving (Eq)
+    } deriving (Eq)
 
 -- class (Unital k, Show k, Eq k) => PolyContext k
 
@@ -96,7 +96,13 @@ instance (Num k) => Group (Mon k ord) where
 instance NFData (Mon k ord) where
   rnf x = seq x ()
 
+instance (Eq k)=> Ord (Mon k Lex) where
+  compare = on compare (snd . getMon)
+  (<) = on (P.<) (snd . getMon)
+  (>) = on (P.>) (snd . getMon)
 
+instance (Eq k)=> Ord (Mon k Revlex) where
+  compare = on compare (snd . getMon)
 
 subPol :: (Num k) => Mon k ord -> Mon k ord -> Mon k ord
 subPol xs xz = Mon $ on subPol' getMon xs xz
