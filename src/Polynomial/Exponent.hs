@@ -54,13 +54,14 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Exp ord
+m [] = error "A empty term should be represented as m[0]"
 m xs = Exp $ makeVectorR D Par (Sz $ length xs) (xs !!)
 -----------------------------------------------------------------------------------------
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position
 mp :: [Int] -> [Int] -> Exp ord
 mp xs xz
-  | lxs /= lxz = throw $ SizeMismatchException (Sz lxs ) (Sz lxz)
+  | lxs /= lxz = error "The size of the position and exponent doesn't correspond"
   | otherwise =  m $ mp' xs xz 1
   where
     lxs = length xs
