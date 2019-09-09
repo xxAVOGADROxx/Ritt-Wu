@@ -41,7 +41,7 @@ lv p =  "x_{" ++ show (class' p)  ++ "}"
 --lv p =  "x_{" ++ show ( p)  ++ "}"
 --------------------------------------------------------------
 -- leading degreee
-ld :: Poly t Revlex -> Int
+ld :: Poly t ord -> Int
 ld xp =
   max' $
   P.map
@@ -70,18 +70,26 @@ lmMax' (x:x':xs) = lmMax'
         then x
         else x') :
      xs)
----------------------------------------------------------------
+--MULTIVARIABLE -------------------------------------------------
+-- ---------------------------------------------------------------
 lm :: (Num t, Eq t ) => Poly t Revlex -> Term t Revlex
 lm xp =  Term (1, xs)
   where
     (x,xs) = getT $ lt xp
---------------------------------------------------------------
--- leading coefficient in x_p (class f = p), is all the terms without the leading variable (the initial) --ojo el inicial debe estar fact?
-lc :: (Eq t) => Poly t Revlex -> Term t Revlex
-lc xp = lc' $ getT $ lt xp
+-- --------------------------------------------------------------
+-- -- INITIAL of f
+-- lc :: (Eq t) => Poly t Revlex -> Term t Revlex
+-- lc xp = lc' $ getT $ lt xp
 
-lc' :: (k, Mon Revlex ) -> Term k Revlex
-lc' (s, xs) = Term $ (s,  m . init . toList . getMon $ xs)
+-- lc' :: (k, Mon Revlex ) -> Term k Revlex
+-- lc' (s, xs) = Term $ (s,  m . init . toList . getMon $ xs)
+-- leading coefficient
+--------------------------------------------------------------
+
+lc :: (Num t, Eq t ) => Poly t Revlex -> Term t Revlex
+lc xp =  Term (x, m[0])
+  where
+    (x,xs) = getT $ lt xp
 --------------------------------------------------------------
 -- reduction of the leading monomial
 red :: (Eq t) => Poly t Revlex -> Poly t Revlex
@@ -114,13 +122,18 @@ mon m = Mon $ getMon b
   where
     (a,b) = getT m
 --------------------------------------------------------------
+-- spolynomial
 spoly :: ( Fractional t, Num t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 spoly f g = Poly [x' N./ lt f ] N.* f N.- Poly [x' N./ lt g] N.* g
   where
     x' = lcmT (lm f) (lm g)
-
+----------------------------------------------------------------
+remainder :: (Fractional t, Ord t ) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+remainder f g
+  | ld f >= ld g = remainder (spoly f g) g
+  | otherwise = f
 -- pseudo remainder
--- prem :: (Eq t, Num t) => Poly t Lex -> Poly t Lex -> Int
+-- prem :: (Eq t, Num t) => Poly t ord -> Poly t ord -> Poly t ord
 -- prem g' f'
 --   | h <= r && r' /= Poly [] = aux 
 --   | otherwise = l' r'
@@ -140,6 +153,7 @@ showPoly :: (Ord t, Num t, Show t) => [Term t ord] -> String
 showPoly [] = ""
 showPoly (x:xs)
   | (fst $ getT x) P.> 0 = " + " ++ show x ++ showPoly xs
+  | (fst $ getT x) P.< 0 = " - " ++ show x ++ showPoly xs
   | otherwise = show x ++ showPoly xs
 
 ---------------------------------------------------------------
@@ -262,6 +276,10 @@ scheduleSums =
 -- q = Poly [Term(1,m[8,2]), Term(2,m[5,1]), Term(4,m[2]), Term(-1, m[6])] :: Poly Int Revlex
 -- r = Poly [Term(8,m[2]),Term(-2,m[6])] :: Poly Int Revlex
 -- a = Poly [expM (Term(1,m[3]) :: Term Int Revlex) 3]
--- example spoly
+-- example spoly (int) Ans: (-15) % 2 + 10 % 1x₁¹(-5) % 2x₁²
 -- f1 = Poly [Term(2,mp[2][2]),Term(-4,mp[2][1]), Term(1,m[2]), Term(-4,m[1]), Term(3,m[0])] :: Poly Rational Revlex
 -- f2 = Poly [Term(1,mp[2][2]), Term(-2,mp[2][1]),Term(3,m[2]),Term(-12,m[1]), Term(9,m[0])] :: Poly Rational Revlex
+-- example Cox Ans:
+-- f1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
+-- f2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
+-- r f1 f2 = 8 -2x⁴

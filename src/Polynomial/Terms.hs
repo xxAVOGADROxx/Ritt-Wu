@@ -29,15 +29,15 @@ newtype Term k ord =
 
 -- ----------------------<< FUNCTIONS >>--------------------
 -- ----------------------<< INSTANCES >>--------------------
-instance (Show k, Eq k) => Show (Term k ord) where
+instance (Num k, Show k, Eq k) => Show (Term k ord) where
   show xs = showMon (getT xs)
 
-showMon :: (Show k, Eq k) => (k, Mon ord) -> String
+showMon :: (Num k, Show k, Eq k) => (k, Mon ord) -> String
 showMon m
   | list == zero = show coeff
   | otherwise = show coeff ++ show list
   where
-    coeff = fst m
+    coeff = abs $fst m
     list = snd m
 -----------------------------------------------------------------------------------------
 -- class (CR (Coefficient poly)) =>
