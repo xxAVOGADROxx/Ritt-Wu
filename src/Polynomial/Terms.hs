@@ -19,8 +19,8 @@ import Control.DeepSeq
 
 -- | Constraint synonym for rings that can be used as polynomial coefficient.
 
--- class (DecidableZero r, Ring r, Commutative r, Eq r) =>   CR r
--- instance (DecidableZero r, Ring r, Commutative r, Eq r) => CR r
+class (DecidableZero r, Ring r, Commutative r, Eq r) =>   CoeffRing r
+instance (DecidableZero r, Ring r, Commutative r, Eq r) => CoeffRing r
 
 newtype Term k ord =
   Term
@@ -66,7 +66,7 @@ instance (Num k) => Additive (Term k ord) where
   (+) xs xp =  Term $ on addPol' getT xs xp
 
 addPol' :: (Num k) => (k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
-addPol' (a, b) (c, d) = (a P.+ c, b N.+ d) --numeric ours newtypes and prelude defined types
+addPol' (a, b) (c, d) =(a P.+ c, b N.+ d) --numeric ours newtypes and prelude defined types
 -----------------------------------------------------------------------------------------
 instance (Num k) => Multiplicative (Term k ord) where
   (*) xs xz = Term $ on multPol' getT xs xz
@@ -74,10 +74,10 @@ instance (Num k) => Multiplicative (Term k ord) where
 multPol' :: (Num k) => (k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
 multPol' (a, b) (c, d) = (a P.* c, b N.* d)
 -----------------------------------------------------------------------------------------
-instance (Num k, Fractional k) => Division (Term k ord) where
+instance (Fractional k, Num k) => Division (Term k ord) where
   (/) xs xp = Term $ on divPol' getT xs xp
 
-divPol' :: (Fractional k)=>(k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
+divPol' :: (Fractional k, Num k )=>(k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
 divPol' (a,b) (c,d)= (a P./ c, b N./ d )
 
 instance (Num k) => Unital (Term k ord) where

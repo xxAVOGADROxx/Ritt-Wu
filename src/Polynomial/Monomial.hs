@@ -81,7 +81,7 @@ instance  Show (Mon ord) where
   show m = formatSS $ showMon (A.toList (getMon m)) 1
 
 showMon :: (Num a, Eq a, Ord a, Show a) => [a] -> Int -> String
-showMon [] _ = "Empty Term"
+showMon [] _ = ""
 showMon (x:xs) s
   | x == 0 = printMon
   | null xs = format
@@ -92,10 +92,23 @@ showMon (x:xs) s
     printMon = showMon xs (next s)
 ---------------------------------------------------------------------------------------
 instance Multiplicative (Mon ord) where
-  (*) xs xz = Mon $ on (A.liftArray2 (P.+)) getMon xs xz
+  (*) xs xz =  m ( on aux  (toList . getMon) xs xz)
+
+aux :: [Int] -> [Int] -> [Int]
+aux [] [] = []
+aux (x:xs) [] = x : aux xs []
+aux [] (y:yp) = y : aux [] yp
+aux (x:xs) (y:yp) = x P.+ y : aux xs yp
 ---------------------------------------------------------------------------------------
 instance Division (Mon ord) where
-  (/) xs xz = Mon $ on (A.liftArray2 (P.-)) getMon xs xz
+  (/) xs xz = m ( on aux' (toList . getMon) xs xz)
+
+aux' :: [Int] -> [Int] -> [Int]
+aux' [] [] = []
+aux' (x:xs) [] = x : aux' xs []
+aux' [] (y:yp) = y : aux' [] yp
+aux' (x:xs) (y:yp) = x P.- y : aux' xs yp
+
 ---------------------------------------------------------------------------------------
 instance Additive (Mon ord) where
   (+) xs xz = Mon $ on (verificationMl) getMon xs xz

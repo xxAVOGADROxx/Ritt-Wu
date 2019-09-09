@@ -12,7 +12,6 @@ import Data.Function -- on
 import Data.Char.SScript
 import Data.List
 
-
 newtype Poly t ord =
   Poly
     { getP :: [Term t ord]
@@ -89,7 +88,8 @@ red :: (Eq t) => Poly t Revlex -> Poly t Revlex
 red xs = Poly [x | x <- (getP xs), x /= a]
   where
     a = lt xs
---------------------------------------------------------------
+
+------------------------------------------------------------
 --Monomial exponentation
 expM :: (Num k) => Term k ord -> Int -> Term k ord
 expM m i = Term (p, Mon $ A.map (P.*i) b)
@@ -114,10 +114,10 @@ mon m = Mon $ getMon b
   where
     (a,b) = getT m
 --------------------------------------------------------------
--- spoly :: (Fractional t, Num t, Eq t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
--- spoly f g = Poly [(x' N./ lm f )] N.* f N.- Poly [(x' N./ lm g)] N.* g
---   where
---     x' = lcmT f g
+spoly :: ( Fractional t, Num t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+spoly f g = Poly [x' N./ lt f ] N.* f N.- Poly [x' N./ lt g] N.* g
+  where
+    x' = lcmT (lm f) (lm g)
 
 -- pseudo remainder
 -- prem :: (Eq t, Num t) => Poly t Lex -> Poly t Lex -> Int
@@ -144,20 +144,30 @@ showPoly (x:xs)
 
 ---------------------------------------------------------------
 instance (Num t, Eq t) => Additive (Poly t Revlex) where
-  (+) a b = Poly $ P.map h $ groupBy (\(a,b)(c,d) -> (==) b d) $ sortBy (\(a,b)(c,d) -> compare b d) (P.map getT $ on (++) getP a b )
+  (+) a b =
+    Poly $
+    filter removeZero $
+    P.map tsum $
+    groupBy (\(a, b) (c, d) -> (==) b d) $
+    sortBy (\(a, b) (c, d) -> compare b d) (P.map getT $ on (++) getP a b)
 
-h :: (Num k)=>  [(k, Mon ord)] -> Term k ord
-h [] = zero
-h [x] = Term x
-h (x:xs) = (Term x) N.+ h xs
+tsum :: (Num t) => [(t, Mon ord)] -> Term t ord
+tsum [x] = Term x
+tsum (x:xs) = (Term x) N.+ tsum xs
 
-addPol :: (Num t) =>[Term t ord ] -> [Term t ord] -> [Term t ord]
-addPol xs xp = concat [ maybe [] id (maybeMon x y) |  x <- xs, y <- xp ]
+removeZero :: (Num t, Eq t) => Term t ord -> Bool
+removeZero term
+  | a /= 0 = True
+  | otherwise = False
+  where
+    (a,b) = getT term
+-- addPol :: (Num t) => [Term t ord] -> [Term t ord] -> [Term t ord]
+-- addPol xs xp = concat [maybe [] id (maybeMon x y) | x <- xs, y <- xp]
 
-maybeMon :: (Num t ) => Term t ord -> Term t ord -> Maybe ([Term t ord])
-maybeMon a b
-  | mon a == mon b = Just $ [a N.+ b]
-  | otherwise = Nothing
+-- maybeMon :: (Num t) => Term t ord -> Term t ord -> Maybe ([Term t ord])
+-- maybeMon a b
+--   | mon a == mon b = Just $ [a N.+ b]
+--   | otherwise = Nothing
 
 -- rmdups :: Ord t => [Term t ord] -> [Term t ord]
 -- rmdups = rmdups' Set.empty where
@@ -169,11 +179,19 @@ maybeMon a b
 
 instance (Num t, Eq t) => Semiring (Poly t Revlex)
 instance (Num t, Eq t) => Abelian (Poly t Revlex)
-instance (Num t) => Multiplicative (Poly t ord) where
-  (*) xs xp = Poly $ simplification $[ x N.* y | x <- (getP xs), y <- (getP xp) ]
+instance (Num t, Eq t) => Multiplicative (Poly t Revlex) where
+  (*) xs xp = simp $ Poly $ [ x N.* y | x <- (getP xs), y <- (getP xp) ]
 
-simplification :: [Term t ord] -> [Term t ord]
-simplification (x:xs) = undefined
+simp :: (Num t, Eq t) => Poly t Revlex -> Poly t Revlex 
+simp xs =
+    Poly $
+    filter removeZero $
+    P.map tsum $
+    groupBy (\(a, b) (c, d) -> (==) b d) $
+    sortBy (\(a, b) (c, d) -> compare b d) (P.map getT $ getP xs )
+---------------------------------------------------------------------------
+-- instance Division (Mon ord) where
+--   (/) xs xz =
 
 -- λ> c = Poly [Term(3,m[1,2]), Term(5,m[2,3])] :: Poly Int Lex
 -- λ> d = Poly [Term(2,m[2,1]), Term(2,m[3,5])] :: Poly Int Lex
@@ -182,7 +200,19 @@ simplification (x:xs) = undefined
 -- λ> 
 
 instance (Num t, Eq t) => Group (Poly t Revlex) where
-  (-) =  undefined --
+  (-) a b =
+    Poly $
+    filter removeZero $
+    P.map tsum $
+    groupBy (\(a, b) (c, d) -> (==) b d) $
+    sortBy (\(a, b) (c, d) -> compare b d) (P.map getT $  (++) (getP a) (change $ getP b)  )
+
+change :: (Num t) => [Term t ord] -> [Term t ord]
+change [] = []
+change (x:xs) = Term ((-1) P.* a, b) : change xs
+   where
+    (a,b) = getT x
+
 
 instance (Num t, Eq t) => LeftModule Integer (Poly t Revlex) where
   (.*) = undefined
@@ -218,18 +248,20 @@ scheduleSums =
 --  Poly [Term(4,m[1,2]), Term(-3,m[5,6]), Term(6,mp[4][9])] :: Poly Int Lex
 -- Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[3,4,5][1,2,3]), Term(34, mp[3,4,5][2,2,3])] :: Poly Int Lex
 -- a = Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[2,3,4,5][4,1,2,3]), Term(34, mp[2,3,4,5][8,2,2,3])] :: Poly Int Lex
-
+-- c = Poly [Term(2,m[2,1]), Term(1, m[1,2])] :: Poly Int Revlex
 -- f = Poly [Term(1,m[2,3]), Term(-1,m[0,1])] :: Poly Int Lex
 -- g = Poly [Term(1,m[3,1]), Term(-2,m[])] :: Poly Int Lex
 
--- f :: Int -> Maybe Int
--- f x
---   | x P.> 1 = Just x
---   | otherwise = Nothing
-
 -- a = Poly [Term(1,m[2,1]), Term(1,m[1,2])] :: Poly Int Revlex
 -- b = Poly [Term(1,m[3]), Term(2,m[2,1]), Term(1,mp[3][1]), Term(3,m[1,2])] :: Poly Int Revlex
--- c = on (++) getP a b
--- f = groupBy (\(a,b)(c,d) -> compare b d) $ sortBy (\(a,b)(c,d) -> compare b d) (P.map getT c)
--- g = P.map h $ groupBy (\(a,b)(c,d) -> (==) b d) $ sortBy (\(a,b)(c,d) -> compare b d) (P.map getT c)
-
+-- c = Poly [Term(2,m[2,1]), Term(1, m[1,2])] :: Poly Int Revlex
+--Ideals
+-- >>>
+-- f = Poly [Term(1,m[2,3]), Term(-1, mp[2][1])] :: Poly Int Revlex
+-- g = Poly [Term(1,m[3,1]), Term(-2,m[0])]  :: Poly Int Revlex
+-- q = Poly [Term(1,m[8,2]), Term(2,m[5,1]), Term(4,m[2]), Term(-1, m[6])] :: Poly Int Revlex
+-- r = Poly [Term(8,m[2]),Term(-2,m[6])] :: Poly Int Revlex
+-- a = Poly [expM (Term(1,m[3]) :: Term Int Revlex) 3]
+-- example spoly
+-- f1 = Poly [Term(2,mp[2][2]),Term(-4,mp[2][1]), Term(1,m[2]), Term(-4,m[1]), Term(3,m[0])] :: Poly Rational Revlex
+-- f2 = Poly [Term(1,mp[2][2]), Term(-2,mp[2][1]),Term(3,m[2]),Term(-12,m[1]), Term(9,m[0])] :: Poly Rational Revlex
