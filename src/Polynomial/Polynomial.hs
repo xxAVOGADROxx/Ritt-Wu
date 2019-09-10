@@ -77,13 +77,18 @@ lm xp =  Term (1, xs)
   where
     (x,xs) = getT $ lt xp
 -- --------------------------------------------------------------
--- -- INITIAL of f
--- lc :: (Eq t) => Poly t Revlex -> Term t Revlex
--- lc xp = lc' $ getT $ lt xp
+-- -- Initial of a palynomial with respect to a variable 
+initOfv :: (Eq t) => Poly t Revlex -> Poly t Revlex
+initOfv xp = Poly [ g x | x <- getP xp, f x == ld xp]
+  where
+    f = last . toList . getMon . snd . getT
+    g = takeInit
 
--- lc' :: (k, Mon Revlex ) -> Term k Revlex
--- lc' (s, xs) = Term $ (s,  m . init . toList . getMon $ xs)
--- leading coefficient
+takeInit :: Term t ord -> Term t ord
+takeInit x = Term (a, m $ f b)
+  where
+    (a,b) = getT x
+    f = init . toList . getMon
 --------------------------------------------------------------
 
 lc :: (Num t, Eq t ) => Poly t Revlex -> Term t Revlex
@@ -132,20 +137,16 @@ remainder :: (Fractional t, Ord t ) => Poly t Revlex -> Poly t Revlex -> Poly t 
 remainder f g
   | ld f >= ld g = remainder (spoly f g) g
   | otherwise = f
+------------------------------------------------------------
 -- pseudo remainder
--- prem :: (Eq t, Num t) => Poly t ord -> Poly t ord -> Poly t ord
--- prem g' f'
---   | h <= r && r' /= Poly [] = aux 
---   | otherwise = l' r'
---   where
---     r' = g'
---     r = ld r'
---     h' = f'
---     h = ld h'
---     d = r-h +1
---     l' = lc h'
-
--------------------------------------- <<INSTANCES >> ------------------------------------
+prem :: (Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+prem g f
+  | g /= Poly[] && ld g >= m = prem (calc)(f)
+  | otherwise = g
+  where
+    m = ld f
+    calc = (initOfv f N.* g) N.- (initOfv g N.* f N.* Poly [Term(1,mp[2][ld g P.- m])])
+----------------------- <<INSTANCES >> ------------------------------------
 instance (Ord t, Num t, Show t) => Show (Poly t ord) where
   show m = showPoly (getP m)
 
@@ -279,7 +280,12 @@ scheduleSums =
 -- example spoly (int) Ans: (-15) % 2 + 10 % 1x₁¹(-5) % 2x₁²
 -- f1 = Poly [Term(2,mp[2][2]),Term(-4,mp[2][1]), Term(1,m[2]), Term(-4,m[1]), Term(3,m[0])] :: Poly Rational Revlex
 -- f2 = Poly [Term(1,mp[2][2]), Term(-2,mp[2][1]),Term(3,m[2]),Term(-12,m[1]), Term(9,m[0])] :: Poly Rational Revlex
--- example Cox Ans:
+-- example Cox 350 Ans:
 -- f1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
 -- f2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
 -- r f1 f2 = 8 -2x⁴
+-- poly to taste the initial term
+-- f1 = Poly [Term(4,m[2,1]),Term(-1,m[6,1])] :: Poly Int Revlex
+-- buchberger examole 19
+-- f1 = Poly [Term(1,m[1,2]), Term(1,m[0])] :: Poly Int Revlex
+-- f2 = Poly [Term(2,mp[2][3]), Term(-1,mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
