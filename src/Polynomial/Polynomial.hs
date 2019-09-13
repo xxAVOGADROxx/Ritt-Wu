@@ -1,7 +1,17 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
-module Polynomial.Polynomial()where
+module Polynomial.Polynomial
+  (
+    Poly(..),
+    class',
+    ld,
+    prem,
+    lc,
+    lt,
+    lm,
+    initOfv
+  ) where
 import Polynomial.Terms
 import Polynomial.Monomial
 import Prelude as P
@@ -34,8 +44,8 @@ max' (x:x':xs) =
      xs)
 --------------------------------------------------------------
 -- leading variable 
-lv :: Poly t Revlex -> String
-lv p =  "x_{" ++ show (class' p)  ++ "}"
+lv :: Poly t Revlex -> Int
+lv p =  class' p
 --  LEX
 --lv :: Poly t Lex -> String
 --lv p =  "x_{" ++ show ( p)  ++ "}"
@@ -79,10 +89,11 @@ lm xp =  Term (1, xs)
 -- --------------------------------------------------------------
 -- -- Initial of a palynomial with respect to a variable 
 initOfv :: (Eq t) => Poly t Revlex -> Poly t Revlex
-initOfv xp = Poly [ g x | x <- getP xp, f x == ld xp]
+initOfv xp = Poly [ g x | x <- getP xp, f x == ld xp && class' xp == h x]
   where
     f = last . toList . getMon . snd . getT
     g = takeInit
+    h =  elemsCount . getMon . snd . getT
 
 takeInit :: Term t ord -> Term t ord
 takeInit x = Term (a, m $ f b)
@@ -141,11 +152,11 @@ remainder f g
 -- pseudo remainder
 prem :: (Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 prem g f
-  | g /= Poly[] && ld g >= m = prem (calc)(f)
+  | g /= Poly[] && class' g == class' f && ld g >= m = prem (calc)(f)
   | otherwise = g
   where
     m = ld f
-    calc = (initOfv f N.* g) N.- (initOfv g N.* f N.* Poly [Term(1,mp[2][ld g P.- m])])
+    calc = (initOfv f N.* g) N.- (initOfv g N.* f N.* Poly [Term(1,mp[lv f][ld g P.- m])])
 ----------------------- <<INSTANCES >> ------------------------------------
 instance (Ord t, Num t, Show t) => Show (Poly t ord) where
   show m = showPoly (getP m)
@@ -212,7 +223,8 @@ simp xs =
 -- λ> d = Poly [Term(2,m[2,1]), Term(2,m[3,5])] :: Poly Int Lex
 -- λ> c N.* d
 -- +6x₁³x₂³+6x₁⁴x₂⁷+10x₁⁴x₂⁴+10x₁⁵x₂⁸
--- λ> 
+-- λ>
+-- 22 marzo bryan
 
 instance (Num t, Eq t) => Group (Poly t Revlex) where
   (-) a b =
@@ -251,15 +263,6 @@ instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
 -- f = Poly [Term (1,m[1,2]), Term(1, m[0])] :: Poly Int Revlex
 -- g = Poly [Term (2,mp[2][3]), Term(-1, mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
 
-scheduleSums :: IO [Int]
-scheduleSums =
-  withScheduler (ParOn [1..4]) $ \ scheduler -> do
-    scheduleWork scheduler $ pure (10 P.+ 1)
-    scheduleWork scheduler $ pure (20 P.+ 2)
-    scheduleWork scheduler $ pure (30 P.+ 3)
-    scheduleWork scheduler $ pure (40 P.+ 4)
-    scheduleWork scheduler $ pure (50 P.+ 5)
-
 --  Poly [Term(4,m[1,2]), Term(-3,m[5,6]), Term(6,mp[4][9])] :: Poly Int Lex
 -- Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[3,4,5][1,2,3]), Term(34, mp[3,4,5][2,2,3])] :: Poly Int Lex
 -- a = Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[2,3,4,5][4,1,2,3]), Term(34, mp[2,3,4,5][8,2,2,3])] :: Poly Int Lex
@@ -286,6 +289,7 @@ scheduleSums =
 -- r f1 f2 = 8 -2x⁴
 -- poly to taste the initial term
 -- f1 = Poly [Term(4,m[2,1]),Term(-1,m[6,1])] :: Poly Int Revlex
--- buchberger examole 19
+-- buchberger example 19
 -- f1 = Poly [Term(1,m[1,2]), Term(1,m[0])] :: Poly Int Revlex
 -- f2 = Poly [Term(2,mp[2][3]), Term(-1,mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
+-- dividendo primero divisor despues

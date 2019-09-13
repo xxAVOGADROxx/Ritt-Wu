@@ -70,7 +70,7 @@ mp xs xz
 mp' :: [Int] -> [Int] -> Int -> [Int]
 mp' [] [] _ = []
 mp' (p:ps) (x:xs) n
-  | p == 0 = error "The initial monomial position is 0 not 1"
+  | p == 0 = error "The initial monomial position is 1 not 0"
   | n /= p = 0 : mp' (p : ps) (x : xs) next
   | otherwise = x : mp' (ps) (xs) next
   where
@@ -92,16 +92,22 @@ showMon (x:xs) s
     printMon = showMon xs (next s)
 ---------------------------------------------------------------------------------------
 instance Multiplicative (Mon ord) where
-  (*) xs xz =  m ( on aux  (toList . getMon) xs xz)
+  (*) xs xz =  m ( quitZero $ on aux  (toList . getMon) xs xz)
 
 aux :: [Int] -> [Int] -> [Int]
 aux [] [] = []
 aux (x:xs) [] = x : aux xs []
 aux [] (y:yp) = y : aux [] yp
 aux (x:xs) (y:yp) = x P.+ y : aux xs yp
+
+quitZero :: [Int] -> [Int]
+quitZero [0] = [0]
+quitZero xs
+  | last xs == 0 = quitZero $ init xs
+  | otherwise = xs
 ---------------------------------------------------------------------------------------
 instance Division (Mon ord) where
-  (/) xs xz = m ( on aux' (toList . getMon) xs xz)
+  (/) xs xz = m ( quitZero $on aux' (toList . getMon) xs xz)
 
 aux' :: [Int] -> [Int] -> [Int]
 aux' [] [] = []
