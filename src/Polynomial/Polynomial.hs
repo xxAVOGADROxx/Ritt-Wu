@@ -10,7 +10,8 @@ module Polynomial.Polynomial
     lc,
     lt,
     lm,
-    initOfv
+    initOfv,
+    max'
   ) where
 import Polynomial.Terms
 import Polynomial.Monomial
