@@ -76,15 +76,18 @@ basicSet xs =  sPLRR (setClassPs xs) []
 -----------------------------------------------------------------------------
 charSet :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex]
 charSet ps
-  | [] == bsDividePs a ps = a
-  | otherwise = charSet (ps ++ a)
+  | basicSet ps /= ps  = charSet a
+  | otherwise = ps
   where
-    a = basicSet ps
+    a = bsDividePs ps  (basicSet ps)
 -----------------------------------------------------------------------------
 -- division of every pk by Bs in PS
 bsDividePs :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePs ps bs = [sprem p bs |p <- ps ]
+bsDividePs ps bs = d (red bs ps) bs ++ bs 
 -----------------------------------------------------------------------------
+-- auxiliar function that perform the division of each polynomial by the triangular form
+d :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+d xs xp = [ sprem x xp | x <- xs]
 -- sucesive pseudo division of a polynomial and a polynomial set
 sprem :: (Num t, Eq t) =>Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
 sprem rm [] = rm
@@ -94,8 +97,10 @@ sprem rm (b:bs)
   where
     a = prem rm b
 -----------------------------------------------------------------------------
-red :: [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-red xs xp = undefined
+-- reducction of two list of  polynomials
+red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+red [] xp = xp
+red (x:xs) xp = red xs (delete x xp)
 -----------------------------------------------------------------------------
 
 scheduleSums :: IO [Int]
