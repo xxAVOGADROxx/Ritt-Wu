@@ -254,6 +254,8 @@ instance (Num t, Eq t) => RightModule Natural (Poly t Revlex) where
 instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
   zero = Poly []
 
+instance NFData (Poly Rational Revlex) where
+  rnf x = seq x ()
 -- a =  Poly [Term(1,m[1,2]), Term(2,m[3,4]), Term(4,m[1,2])] :: Poly Int Lex
 -- sortBy (\ (Term (_,b)) (Term(_,d)) -> compare b d) $ getP a
 
