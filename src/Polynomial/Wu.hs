@@ -2,9 +2,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Polynomial.Wu (
 psByTf,
-psByTfLR,
+--psByTfLR,
+psByTfLRt,
 psByTfLRIO,
-wrapper
+--wrapper
+charSet,
+charSetPfPr,
+charSetPfS
                      ) where
 import Control.Scheduler
 import Polynomial.Monomial
@@ -19,6 +23,7 @@ import Prelude as P
 import Control.Concurrent
 import Control.DeepSeq
 import Foreign.Marshal.Unsafe
+import System.IO.Unsafe
 --import Numeric.Algebra as N
 -- import Prelude as P
 -- Group the polynomial set PS in different classes
@@ -104,17 +109,63 @@ psByTf :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 psByTf ps bs = [ sprem x bs | x <- ps]
 ----- *****************************-----------------------
 -- function that paralellism the work
---poly set by  triangular form lehins recomendation
-psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
-psByTfLR ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex])
 
-wrapper ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
-wrapper ps bs = unsafeLocalState $ psByTfLRIO ps bs 
+---------------------------PSSSSSSSSSSSSSSSSSSS------------
+-- characteristic set in parallel computation using pseudo remainder
+charSetPfPr :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetPfPr ps
+  | basicSet ps /= ps  = charSetPfPr a
+  | otherwise = ps
+  where
+    a = bsDividePsPF ps  (basicSet ps)
+
+bsDividePsPF ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsPF ps bs = psByTfLRt (red bs ps) bs ++ bs  --psByTfLR
+  
+--poly set by  triangular form lehins recomendation
+--psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
+--psByTfLR ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex])
+-- sin embargo no puedo trabajar con IO poly -> IO poly -> IO poly porque IO no es traversable indispensable para traverseConcurrently
+psByTfLRt :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psByTfLRt ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+-- ahora me pide el nfdata pra poly (sin siquiera haberlo puesto en el bench)
+
+-------------------------------------PSSSSSSSSSSSSSSSSSSS-------------------------
+-------------------------------------SPPPPPPPPPPPPPPPPPP--------------------------
+--characteristic set Parallel Form Spoly
+charSetPfS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetPfS ps
+  | basicSet ps /= ps  = charSetPfS a
+  | otherwise = ps
+  where
+    a = bsDividePsPfS ps  (basicSet ps)
+
+bsDividePsPfS ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsPfS ps bs = psByTfLRt (red bs ps) bs ++ bs  --psByTfLR
+
+psByTfLRtS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psByTfLRtS ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
+
+-- sucesive pseudo division of a polynomial and a polynomial set (SPOLY)
+sspoly :: (Fractional t, Num t, Eq t, Ord t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
+sspoly rm [] = rm
+sspoly rm (b:bs)
+  | a /= Poly [] = sspoly a bs
+  | otherwise = Poly[]
+  where
+    a = spoly rm b
+
+-------------------------------------SPPPPPPPPPPPPPPPPPP-------------------------------
+--wrapper ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
+--wrapper ps bs = unsafeDupablePerformIO $ psByTfLRIO ps bs 
+-- Porque la funcion IO nencesita el NFData y no el wrapper ?
 
 psByTfLRIO ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 psByTfLRIO ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
 
 instance NFData (IO[Poly Rational Revlex]) where
+  rnf x = seq x ()
+instance NFData (Poly t Revlex) where
   rnf x = seq x ()
 -- psByTfPM :: (Num t, Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]-> IO [Poly t Revlex]
 -- psByTfPM ps bs = withScheduler Par $ \x -> do
@@ -179,5 +230,4 @@ red (x:xs) xp = red xs (delete x xp)
 -- calculator example
 -- f1 = Poly[Term(1,mp[2][2]), Term(-1, m[1,1]), Term(-1, m[0])] :: Poly Rational Revlex; f2 = Poly[Term(1,m[2]), Term(-2,mp[3][1])] :: Poly Rational Revlex; f3 = Poly[Term(1,mp[3][2]), Term(-1,m[1,1]), Term(1,m[0])] :: Poly Rational Revlex
 -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])]] :: [Poly Rational Revlex]; c2 = [Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3,mp[1,2][1,1])]] :: [Poly Rational Revlex]; c3 = [Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] :: [Poly Rational Revlex]; ps = concat $ c1:c2:c3:[]
-
 
