@@ -22,8 +22,8 @@ import Control.Scheduler
 import Numeric.Algebra as N
 import Data.Function -- on
 import Data.Char.SScript
-import Data.List
-
+import Data.List  as L
+--import Data.Set
 newtype Poly t ord =
   Poly
     { getP :: [Term t ord]
@@ -97,6 +97,12 @@ initOfv xp = Poly [ g x | x <- getP xp, f x == ld xp && class' xp == h x]
     g = takeInit
     h =  elemsCount . getMon . snd . getT
 
+initOfv' :: (Eq t) => Poly t Revlex -> Poly t Revlex
+initOfv' xp = Poly [x | x <- getP xp, f x == ld xp && class' xp == h x]
+  where
+    f = last . toList . getMon . snd . getT
+    h =  elemsCount . getMon . snd . getT
+
 takeInit :: Term t ord -> Term t ord
 takeInit x = Term (a, m $ f b)
   where
@@ -127,6 +133,30 @@ expM m i = Term (p, Mon $ A.map (P.*i) b)
 --- comparison total degree (muti degree monomial)
 mdM :: Term k ord -> [Int]
 mdM = toList . getMon . snd .  getT
+--------------------------------------------------------------
+-- lcm para polynomios
+lcmP ::  (Ord t, Num t, Integral t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+lcmP xs xp
+  | length (getP xs) == 1 && length (getP xp) == 1 = Poly[ on lcmT (head . getP) xs xp]
+  | length (getP xp) == 1 =   (withoutFactor xs)  N.* Poly [lcmT (head . getP $ xp) (factor xs)]
+  | otherwise = error "completar esta seccion"
+
+factor :: (Num t) => Poly t Revlex -> Term t Revlex
+factor ps = Term (1, m $ commList)
+  where
+    --k = mcd [ a | x <- getP ps, let (a,b) = getT x]
+    commList = L.foldl1 (P.zipWith min) [(toList . getMon) b | x <- getP ps, let (a,b) = getT x]
+
+withoutFactor :: (Integral t) => Poly t Revlex -> Poly t Revlex
+withoutFactor xs = Poly [ Term (a', b' N.- b) | x <- getP xs, let (a',b') = getT x]
+  where (a,b) = getT $ factor xs
+
+
+
+lcm'' :: (Ord t, Num t )=> [Term t Revlex] -> [Term t Revlex] -> [Term  t Revlex]
+lcm'' xs xp
+  | length xs == 1 && length xp == 1 = [ on lcmT (head) xs xp]
+  | otherwise = undefined
 
 --------------------------------------------------------------
 lcmT ::  (Ord t, Num t) => Term t Revlex -> Term t Revlex  -> Term t Revlex
@@ -141,14 +171,14 @@ mon m = Mon $ getMon b
     (a,b) = getT m
 --------------------------------------------------------------
 -- spolynomial
-spoly :: ( Fractional t, Num t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
-spoly f g = Poly [x' N./ lt f ] N.* f N.- Poly [x' N./ lt g] N.* g
+basicSpoly :: (Integral t, Fractional t, Num t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+basicSpoly f g = (basicSpoly x'  (initOfv' f )) N.* f N.- (basicSpoly x' (initOfv' g)) N.* g --initOFv' ? instead of lt YES
   where
-    x' = lcmT (lm f) (lm g)
+    x' = on lcmP initOfv' f g
 ----------------------------------------------------------------
-remainder :: (Fractional t, Ord t ) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
-remainder f g
-  | ld f >= ld g = remainder (spoly f g) g
+spoly :: (Integral t, Fractional t, Ord t ) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+spoly f g
+  | ld f >= ld g && class' g == class' f  = basicSpoly ( spoly f g) g
   | otherwise = f
 ------------------------------------------------------------
 -- pseudo remainder
@@ -255,7 +285,31 @@ instance (Num t, Eq t) => RightModule Natural (Poly t Revlex) where
 instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
   zero = Poly []
 
+--------------------------FACTOR-----------------
+prime_factors :: Int -> [Int]
 
+prime_factors 1 = []
+prime_factors n
+  | factors == []  = [n]
+  | otherwise = factors ++ prime_factors (n `div` (head factors))
+  where factors = take 1 $ filter (\x -> (n `mod` x) == 0) [2 .. n P.- 1]
+
+mcd' :: [Int] -> [[Int]]
+mcd' ps = P.map (prime_factors) ps
+
+mcd :: [Int] -> Int
+mcd ps =  P.foldl1 (P.*) $ P.foldl1 mezc' (mcd' ps)
+
+mezc' :: [Int] -> [Int] -> [Int]
+mezc' [] _ = []
+mezc' _ [] =  []
+mezc' (x:xs)(y:ys)
+  | x P.< y       = mezc' xs (y:ys)
+  | x P.> y       = mezc'(x:xs) ys
+  | x == y      = [x] ++ mezc' xs ys
+------------------------------------------------
+
+--------------------------FACTOR-----------------
 -- a =  Poly [Term(1,m[1,2]), Term(2,m[3,4]), Term(4,m[1,2])] :: Poly Int Lex
 -- sortBy (\ (Term (_,b)) (Term(_,d)) -> compare b d) $ getP a
 
@@ -289,6 +343,9 @@ instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
 -- example Cox 350 Ans:
 -- f1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
 -- f2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
+-- repect to y
+-- f1 = Poly [Term (1,m[3,2]), Term(-1,mp[1][1])] :: Poly Rational Revlex
+-- f2 = Poly [Term (1,m[1,3]), Term(-2,m[0])] :: Poly Rational Revlex
 -- r f1 f2 = 8 -2x⁴
 -- poly to taste the initial term
 -- f1 = Poly [Term(4,m[2,1]),Term(-1,m[6,1])] :: Poly Int Revlex
@@ -296,3 +353,8 @@ instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
 -- f1 = Poly [Term(1,m[1,2]), Term(1,m[0])] :: Poly Int Revlex
 -- f2 = Poly [Term(2,mp[2][3]), Term(-1,mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
 -- dividendo primero divisor despues
+-- BUCH
+-- p1 = Poly [Term(1,mp[1,4][1,1]), Term(1,mp[3][1]), Term(1,m[1,1])] :: Poly Rational Revlex
+-- p2 = Poly [Term(2,mp[4][2]), Term(-2,mp[3,4][1,1]), Term(5,mp[1,2,4][1,1,1]), Term(-5,m[1,1,1])] :: Poly Rational Revlex
+-- p3 = Poly [Term(1,m[1,3]), Term(-2,m[2,2]), Term(1,mp[2][1])] :: Poly Rational Revlex
+-- p4 = Poly [Term(3,mp[2][4]), Term(-1,m[1])] :: Poly Rational Revlex

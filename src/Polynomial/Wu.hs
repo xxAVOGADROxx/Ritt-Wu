@@ -119,7 +119,7 @@ charSetPfPr ps
   where
     a = bsDividePsPF ps  (basicSet ps)
 
-bsDividePsPF ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsPF ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 bsDividePsPF ps bs = psByTfLRt (red bs ps) bs ++ bs  --psByTfLR
   
 --poly set by  triangular form lehins recomendation
@@ -140,8 +140,8 @@ charSetPfS ps
   where
     a = bsDividePsPfS ps  (basicSet ps)
 
-bsDividePsPfS ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPfS ps bs = psByTfLRt (red bs ps) bs ++ bs  --psByTfLR
+bsDividePsPfS ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsPfS ps bs = psByTfLRtS (red bs ps) bs ++ bs  --psByTfLR
 
 psByTfLRtS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 psByTfLRtS ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )

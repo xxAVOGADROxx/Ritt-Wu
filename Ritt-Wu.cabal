@@ -36,8 +36,9 @@ library
   hs-source-dirs:
       src
   build-depends:
-                        base >=4.7 && <5
+                          base >=4.7 && <5
                 , algebra -any
+                --, containers >= 0.6.0.1
                 -- , containers >= 0.6.0.1
                 , criterion -any
                 , deepseq >= 1.4.4.0
@@ -54,9 +55,10 @@ executable Ritt-Wu-exe
       app
   ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
-                        Ritt-Wu
+                          Ritt-Wu
                 , algebra
                 , base >=4.7 && <5
+                --, containers >= 0.6.0.1
                 --, containers >= 0.6.0.1
                 , criterion
                 , deepseq >= 1.4.4.0
@@ -74,8 +76,9 @@ test-suite Ritt-Wu-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-                        Ritt-Wu
+                          Ritt-Wu
                 , base >=4.7 && <5
+                --, containers >= 0.6.0.1
                  -- ,containers >= 0.6.0.1
                 , deepseq >= 1.4.4.0
                 , scheduler >= 1.4.2
@@ -93,9 +96,10 @@ benchmark Ritt-Wu-benchmark
       Paths_Ritt_Wu
  ghc-options:  -Wall -rtsopts -threaded -with-rtsopts=-N -freverse-errors -O2
  build-depends:
-                       Ritt-Wu
+                         Ritt-Wu
                , algebra
                , base >=4.7 && <5
+               --, containers >= 0.6.0.1
                --, containers >= 0.6.0.1
                , criterion
                , deepseq >= 1.4.4.0

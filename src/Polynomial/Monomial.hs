@@ -184,9 +184,3 @@ instance Unital (Mon ord ) where
 -- Array D Seq (Sz1 0)
 --   [  ]
 -- λ>
-
-
-
-
-
-
