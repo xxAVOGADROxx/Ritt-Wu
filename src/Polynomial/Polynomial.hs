@@ -135,7 +135,7 @@ mdM :: Term k ord -> [Int]
 mdM = toList . getMon . snd .  getT
 --------------------------------------------------------------
 -- lcm para polynomios
-lcmP ::  (Ord t, Num t, Integral t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+lcmP :: (Num t, Ord t)=> Poly t  Revlex -> Poly t  Revlex -> Poly t  Revlex
 lcmP xs xp
   | length (getP xs) == 1 && length (getP xp) == 1 = Poly[ on lcmT (head . getP) xs xp]
   | length (getP xp) == 1 =   (withoutFactor xs)  N.* Poly [lcmT (head . getP $ xp) (factor xs)]
@@ -147,10 +147,14 @@ factor ps = Term (1, m $ commList)
     --k = mcd [ a | x <- getP ps, let (a,b) = getT x]
     commList = L.foldl1 (P.zipWith min) [(toList . getMon) b | x <- getP ps, let (a,b) = getT x]
 
-withoutFactor :: (Integral t) => Poly t Revlex -> Poly t Revlex
-withoutFactor xs = Poly [ Term (a', b' N.- b) | x <- getP xs, let (a',b') = getT x]
+withoutFactor ::(Num t) => Poly t Revlex -> Poly t  Revlex
+withoutFactor xs = Poly [ Term (a', m $ quit b' b) | x <- getP xs, let (a',b') = getT x]
   where (a,b) = getT $ factor xs
+        quit = on quit' (toList . getMon) 
 
+quit' :: [Int]->[Int]->[Int]
+quit' as [] =  as
+quit' (a:as) (b:bs) = a P.- b : quit' as bs 
 
 
 lcm'' :: (Ord t, Num t )=> [Term t Revlex] -> [Term t Revlex] -> [Term  t Revlex]
@@ -162,8 +166,8 @@ lcm'' xs xp
 lcmT ::  (Ord t, Num t) => Term t Revlex -> Term t Revlex  -> Term t Revlex
 lcmT a b =  on lcm' (getT ) a b
 
-lcm' :: (Ord t )=> (t ,Mon Revlex) ->  (t, Mon Revlex) -> Term t Revlex
-lcm' (a, b) (c, d) = Term (max a c, m $ P.zipWith  (max) (toList . getMon  $  b) (toList . getMon  $ d))
+lcm' :: (Ord t, Num t )=> (t ,Mon Revlex) ->  (t, Mon Revlex) -> Term t Revlex
+lcm' (a, b) (c, d) = Term (1, m $ P.zipWith  (max) (toList . getMon  $  b) (toList . getMon  $ d))
 --------------------------------------------------------------
 mon :: Term t ord -> Mon ord 
 mon m = Mon $ getMon b
@@ -171,14 +175,26 @@ mon m = Mon $ getMon b
     (a,b) = getT m
 --------------------------------------------------------------
 -- spolynomial
-basicSpoly :: (Integral t, Fractional t, Num t, Ord t )=> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
-basicSpoly f g = (basicSpoly x'  (initOfv' f )) N.* f N.- (basicSpoly x' (initOfv' g)) N.* g --initOFv' ? instead of lt YES
+basicSpoly ::(Fractional t, Num t, Eq t, Ord t ) =>  Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+basicSpoly f g = (simP x'  (initOfv' f )  f) N.- (simP x' (initOfv' g)  g) --initOFv' ? instead of lt YES
   where
     x' = on lcmP initOfv' f g
+
+simP :: (Fractional t, Num t, Eq t ) =>Poly t Revlex->Poly t Revlex->Poly t Revlex->Poly t Revlex
+simP f1 f2 f3
+  | f1 == f2 = f3
+  | f3 == f2 = f1
+  | length (getP f1) == 1 && length (getP f2) == 1 = Poly [on (N./) (head . getP) f1 f2] N.* f3
+  | a == a'  = b N.* f3
+  | otherwise = Poly [a N./ a'] N.* f3
+    where
+      (a,b) = (factor  f1, withoutFactor f1)
+      (a',b') = (factor f2, withoutFactor f2)
+
 ----------------------------------------------------------------
-spoly :: (Integral t, Fractional t, Ord t ) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+spoly :: (Fractional t, Ord t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 spoly f g
-  | ld f >= ld g && class' g == class' f  = basicSpoly ( spoly f g) g
+  | ld f >= ld g && class' g == class' f  = spoly (basicSpoly f g) g
   | otherwise = f
 ------------------------------------------------------------
 -- pseudo remainder
@@ -341,8 +357,8 @@ mezc' (x:xs)(y:ys)
 -- f1 = Poly [Term(2,mp[2][2]),Term(-4,mp[2][1]), Term(1,m[2]), Term(-4,m[1]), Term(3,m[0])] :: Poly Rational Revlex
 -- f2 = Poly [Term(1,mp[2][2]), Term(-2,mp[2][1]),Term(3,m[2]),Term(-12,m[1]), Term(9,m[0])] :: Poly Rational Revlex
 -- example Cox 350 Ans:
--- f1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
--- f2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
+p1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
+p2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
 -- repect to y
 -- f1 = Poly [Term (1,m[3,2]), Term(-1,mp[1][1])] :: Poly Rational Revlex
 -- f2 = Poly [Term (1,m[1,3]), Term(-2,m[0])] :: Poly Rational Revlex
