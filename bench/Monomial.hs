@@ -187,10 +187,10 @@ main = do
       -- (((N.*) x) y) ] ,bgroup "MonomialT" [bench "nf" $ nf ((zipWith (P.+))
       -- z) p --260ns ,bench "nf-force" $ nf force (((zipWith (P.+)) z) p)
       -- --79ns ,bench "whnf" $ whnf ((zipWith (P.+)) z) p ] ]
-    [ bgroup
-        "Normal division"
-        [bench "whnf" $ whnf (psByTf ps) ps1, bench "nf" $ nf (psByTf ps) ps1]
-    -- , bgroup
+    [ -- bgroup
+    --     "Normal division"
+    --     [bench "whnf" $ whnf (psByTf ps) ps1, bench "nf" $ nf (psByTf ps) ps1]
+    -- -- , bgroup
     --     "IO division"
     --     [ bench "whnf" $ whnf (psByTfLRIO ps) ps1
     --     , bench "nf" $ nf (psByTfLRIO ps) ps1
@@ -208,20 +208,21 @@ main = do
     -- , bgroup
     --     "wrapper"
     --     [bench "whnf" $ whnf (wrapper ps) ps1, bench "nf" $ nf (wrapper ps) ps1]
-    , bgroup
+     bgroup
         "computing charset"
         [ bgroup
             "Normal charSet"
-            [bench "whnf" $ whnf (charSet) pall, bench "nf" $ nf (charSet) pall]
+            [--bench "whnf" $ whnf (charSet) pall
+             bench "nf" $ nf (charSet) pall]
         , bgroup
             "Pseudo charSet"
-            [ bench "whnf" $ whnf (charSetPfPr) pall
-            , bench "nf" $ nf (charSetPfPr) pall
+            [ --bench "whnf" $ whnf (charSetPfPr) pall
+             bench "nf" $ nf (charSetPfPr) pall
             ]
         , bgroup
             "sPoly charSet"
-            [ bench "whnf" $ whnf (charSetPfS) pall
-            , bench "nf" $ nf (charSetPfS) pall
+            [ --bench "whnf" $ whnf (charSetPfS) pall
+             bench "nf" $ nf (charSetPfS) pall
             ]
         ]
     ]

@@ -11,8 +11,15 @@ module Polynomial.Polynomial
     lt,
     lm,
     initOfv,
+    initOfv',
     max',
-    spoly
+    spoly,
+    basicSpoly,
+    lcmP,
+    withoutFactor,
+    lcmT,
+    factor,
+    simP
   ) where
 import Polynomial.Terms
 import Polynomial.Monomial
@@ -139,7 +146,9 @@ lcmP :: (Num t, Ord t)=> Poly t  Revlex -> Poly t  Revlex -> Poly t  Revlex
 lcmP xs xp
   | length (getP xs) == 1 && length (getP xp) == 1 = Poly[ on lcmT (head . getP) xs xp]
   | length (getP xp) == 1 =   (withoutFactor xs)  N.* Poly [lcmT (head . getP $ xp) (factor xs)]
-  | otherwise = error "completar esta seccion"
+  | length (getP xs) == 1 =   (withoutFactor xp)  N.* Poly [lcmT (head . getP $ xs) (factor xp)]
+  | otherwise = Poly[lcmT (factor xs) (factor xp)] N.* withoutFactor xp N.* withoutFactor xs
+--  | otherwise = error "completar ?"
 
 factor :: (Num t) => Poly t Revlex -> Term t Revlex
 factor ps = Term (1, m $ commList)
@@ -185,8 +194,9 @@ simP f1 f2 f3
   | f1 == f2 = f3
   | f3 == f2 = f1
   | length (getP f1) == 1 && length (getP f2) == 1 = Poly [on (N./) (head . getP) f1 f2] N.* f3
-  | a == a'  = b N.* f3
-  | otherwise = Poly [a N./ a'] N.* f3
+  | length (getP f2) == 1 = b N.* Poly [a N./ (head . getP $ f2)] N.* f3
+  | b == b' = Poly [a N./ a' ] N.* f3
+  | otherwise = error "Option not consider" --  case I guess when there are two polynomials
     where
       (a,b) = (factor  f1, withoutFactor f1)
       (a',b') = (factor f2, withoutFactor f2)

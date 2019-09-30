@@ -239,3 +239,12 @@ f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
 f3 =
   Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [0])] :: Poly Rational Revlex
 pall = [f1,f2,f3]
+
+f4 = Poly[Term(3,m[1]), Term(-1, mp[2][1]), Term(-7, m[0])] :: Poly Rational Revlex
+f5 = Poly[Term(2,m[1]), Term(3, mp[2][1]), Term(-1, m[0])]:: Poly Rational Revlex
+pall1= [f4,f5]
+
+f6 =Poly[Term(1,m[1,1]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revlex
+f7 =Poly[Term(1,m[1,2]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revlex
+
+pall2 = [f6,f7]
