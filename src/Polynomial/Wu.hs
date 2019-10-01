@@ -2,13 +2,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Polynomial.Wu (
 psByTf,
---psByTfLR,
 psByTfLRt,
+psByTfLRtS,
 psByTfLRIO,
---wrapper
+
 charSet,
 charSetPfPr,
-charSetPfS
+charSetPfS,
+pall
                      ) where
 import Control.Scheduler
 import Polynomial.Monomial
@@ -28,13 +29,13 @@ import System.IO.Unsafe
 -- import Prelude as P
 -- Group the polynomial set PS in different classes
 setClassPs :: [Poly t Revlex] -> [[Poly t Revlex]]
-setClassPs  xs =  quitTuple . sortGrupPolyClass . searchPolyClass $ xs
+setClassPs =  quitTuple . sortGrupPolyClass . searchPolyClass
 
 searchPolyClass :: [Poly t Revlex] -> [ (Poly t Revlex, Int )]
 searchPolyClass xs = [(x, class' x) |x <- xs]
 
 sortGrupPolyClass ::  [ (Poly t Revlex, Int )] ->  [[ (Poly t Revlex, Int )]]
-sortGrupPolyClass xs = groupBy (\ a b -> on (==) snd a b) $  sortBy (\ a b -> on compare snd a b ) xs
+sortGrupPolyClass xs = groupBy (on (==) snd) $  sortBy (on compare snd) xs
 
 quitTuple ::  [[ (Poly t Revlex, Int )]] -> [[Poly t Revlex]]
 quitTuple xs =   [ L.map fst x | x <- xs]
@@ -59,7 +60,7 @@ sPLRR xs xp
 reducedP :: (Num t, Eq t)=> [Poly t Revlex] -> Poly t Revlex ->  Poly t Revlex
 reducedP [] _ = Poly []
 reducedP (x:xs) z
-  | isReduced x z == True  = x
+  | isReduced x z  = x
   | otherwise = reducedP xs z
 -----------------------------------------------------------------
 -- izq the entering polynomial, right the forming basic set
@@ -71,18 +72,18 @@ isReduced x y
 -----------------------------------------------------------------
 -- compare the degree of two polynomials in a given variable
 degP :: Poly t Revlex -> Int -> Int
-degP xs s = max' [ f x | x <- (getP xs), class' (Poly [x]) >= s]
+degP xs s = max' [ f x | x <- getP xs, class' (Poly [x]) >= s]
   where
     f x = (toList . getMon . snd . getT) x !! (s P.-1)
 -- search the polynomial (S) with lower degree in a list of polynomials with the same class
 lDPolys :: [Poly t Revlex] -> [Poly t Revlex]
-lDPolys xs = h .  g . f $ xs
+lDPolys = h .  g . f 
 
 f :: [Poly t Revlex] -> [ (Poly t Revlex, Int )]
 f xs = [ (x, ld x)| x <- xs]
 
 g :: [(Poly t Revlex, Int)] -> [(Poly t Revlex, Int) ]
-g xs =  head $  groupBy (\(a, b) (c, d) -> (==) b d) $ sortBy (\a b -> on compare snd a b ) xs
+g xs =  head $  groupBy (\(a, b) (c, d) -> (==) b d) $ sortBy (on compare snd) xs
 
 h :: [(Poly t Revlex, Int)]-> [Poly t Revlex]
 h xs = [ fst x |x <- xs]
@@ -207,8 +208,9 @@ sprem rm (b:bs)
 -----------------------------------------------------------------------------
 -- reducction of two list of  polynomials
 red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-red [] xp = xp
-red (x:xs) xp = red xs (delete x xp)
+red xs xp = foldl (flip delete) xp xs
+--red [] xp = xp
+--red (x:xs) xp = red xs (delete x xp)
 -----------------------------------------------------------------------------
 -- graphics calculator examples
 -- p1 = Poly [Term(1,mp[2][2]), Term(-1,m[1,1]), Term(-1,m[0])] :: Poly Rational Revlex
@@ -248,3 +250,17 @@ f6 =Poly[Term(1,m[1,1]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revl
 f7 =Poly[Term(1,m[1,2]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revlex
 
 pall2 = [f6,f7]
+
+
+cesc1 = Poly[Term(1, m[3]), Term(4,m[0])] :: Poly Rational Revlex
+cesc2 = Poly [Term(1,m[3]), Term(-4,m[2]), Term(4,m[0])] :: Poly Rational Revlex
+cesc3 = Poly [Term(-16,m[2])] :: Poly Rational Revlex
+
+q = Poly[Term(4, m[1,1]), Term(-1, m[3]), Term(-4,m[0])] :: Poly Rational Revlex
+r = (cesc1 N.* cesc2 ) N.+ cesc3
+p' = Poly[Term(1,m[3]), Term(-4,m[2]), Term(4,m[0])] :: Poly Rational Revlex
+
+p1 = Poly[Term(4,m[1])] :: Poly Rational Revlex
+p2 = Poly [Term(1,m[3,1]), Term(-4,m[2,1]), Term(4,m[0,1]), Term(-4,m[1])]:: Poly Rational Revlex
+
+p  = p1 N.* p2

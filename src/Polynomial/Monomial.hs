@@ -12,8 +12,6 @@ module Polynomial.Monomial
   (
    -- * Types
    Mon(..),
-   
-
    Lex(..),
    Revlex(..),
     -- * Classes
@@ -72,12 +70,12 @@ mp' [] [] _ = []
 mp' (p:ps) (x:xs) n
   | p == 0 = error "The initial monomial position is 1 not 0"
   | n /= p = 0 : mp' (p : ps) (x : xs) next
-  | otherwise = x : mp' (ps) (xs) next
+  | otherwise = x : mp' ps xs next
   where
     next = n P.+ 1
 -----------------------------------------------------------------------------------------
 ------- <<INSTANCES >>--------------
-instance  Show (Mon ord) where
+instance Show (Mon ord) where
   show m = formatSS $ showMon (A.toList (getMon m)) 1
 
 showMon :: (Num a, Eq a, Ord a, Show a) => [a] -> Int -> String
@@ -92,7 +90,7 @@ showMon (x:xs) s
     printMon = showMon xs (next s)
 ---------------------------------------------------------------------------------------
 instance Multiplicative (Mon ord) where
-  (*) xs xz =  m ( quitZero $ on aux  (toList . getMon) xs xz)
+  (*) xs xz = m (quitZero $ on aux (toList . getMon) xs xz)
 
 aux :: [Int] -> [Int] -> [Int]
 aux [] [] = []
@@ -107,7 +105,7 @@ quitZero xs
   | otherwise = xs
 ---------------------------------------------------------------------------------------
 instance Division (Mon ord) where
-  (/) xs xz = m ( quitZero $on aux' (toList . getMon) xs xz)
+  (/) xs xz = m (quitZero $on aux' (toList . getMon) xs xz)
 
 aux' :: [Int] -> [Int] -> [Int]
 aux' [] [] = []
@@ -117,7 +115,7 @@ aux' (x:xs) (y:yp) = x P.- y : aux' xs yp
 
 ---------------------------------------------------------------------------------------
 instance Additive (Mon ord) where
-  (+) xs xz = Mon $ on (verificationMl) getMon xs xz
+  (+) xs xz = Mon $ on verificationMl getMon xs xz
 ---------------------------------------------------------------------------------------
 instance Semiring (Mon ord)
 instance Abelian (Mon ord)
@@ -131,9 +129,9 @@ instance LeftModule Natural (Mon ord) where
   (.*) = undefined
 instance RightModule Natural (Mon ord) where
   (*.) = undefined
---------------------------------------------------------------------------------------- 
+---------------------------------------------------------------------------------------
 instance Group (Mon ord) where
-  (-)  xs xz = Mon $ on verificationMl getMon xs xz
+  (-) xs xz = Mon $ on verificationMl getMon xs xz
 
 verificationMl :: DelayArray -> DelayArray -> DelayArray
 verificationMl xs xz
@@ -183,4 +181,5 @@ instance Unital (Mon ord ) where
 -- λ> getT a
 -- Array D Seq (Sz1 0)
 --   [  ]
+
 -- λ>

@@ -94,7 +94,7 @@ benchmark Ritt-Wu-benchmark
  main-is:             Monomial.hs
  other-modules:
       Paths_Ritt_Wu
- ghc-options:  -Wall -rtsopts -threaded -with-rtsopts=-N -freverse-errors -O2
+ ghc-options:  -Wall -rtsopts -threaded  -with-rtsopts=-N -freverse-errors -O2
  build-depends:
                          Ritt-Wu
                , algebra
