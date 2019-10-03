@@ -44,6 +44,7 @@ class' :: Poly t ord -> Int
 class' xs = max' $ P.map (elemsCount . getMon . snd . getT) (getP xs)
 
 max' :: [Int] -> Int
+max' [] = error "There is no max in a empty list"
 max' [x] = x
 max' (x:x':xs) =
   max'
@@ -60,7 +61,7 @@ lv = class'
 --lv p =  "x_{" ++ show ( p)  ++ "}"
 --------------------------------------------------------------
 -- leading degreee
-ld :: Poly t ord -> Int
+ld :: Poly t Revlex -> Int
 ld xp =
   max' $
   P.map
@@ -70,7 +71,15 @@ ld xp =
     , class' xp == elemsCount x
     ]
 -- LEX
-
+ld1 :: Poly t Lex -> Int
+ld1 xp =
+  max' $
+  P.map
+    last
+    [ A.toList x
+    | x <- P.map (getMon . snd . getT) (getP xp)
+    , class' xp == elemsCount x
+    ]
 --------------------------------------------------------------
 -- multidegree
 --mdP :: Poly t ord -> [Int]
@@ -114,7 +123,9 @@ takeInit :: Term t ord -> Term t ord
 takeInit x = Term (a, m $ f b)
   where
     (a,b) = getT x
-    f = init . toList . getMon
+    f b
+      | length (toList . getMon $ b) == 1 = [0]
+      | otherwise =  init . toList . getMon $ b
 --------------------------------------------------------------
 
 lc :: (Num t, Eq t ) => Poly t Revlex -> Term t Revlex
@@ -222,6 +233,7 @@ instance (Ord t, Num t, Show t) => Show (Poly t ord) where
 showPoly :: (Ord t, Num t, Show t) => [Term t ord] -> String
 showPoly [] = ""
 showPoly (x:xs)
+  | fst (getT x) == 0 = "0"
   | fst ( getT x) P.> 0 = " + " ++ show x ++ showPoly xs
   | fst ( getT x) P.< 0 = " - " ++ show x ++ showPoly xs
   | otherwise = show x ++ showPoly xs
@@ -384,3 +396,5 @@ instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
 -- p2 = Poly [Term(2,mp[4][2]), Term(-2,mp[3,4][1,1]), Term(5,mp[1,2,4][1,1,1]), Term(-5,m[1,1,1])] :: Poly Rational Revlex
 -- p3 = Poly [Term(1,m[1,3]), Term(-2,m[2,2]), Term(1,mp[2][1])] :: Poly Rational Revlex
 -- p4 = Poly [Term(3,mp[2][4]), Term(-1,m[1])] :: Poly Rational Revlex
+ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
+ps1 = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]

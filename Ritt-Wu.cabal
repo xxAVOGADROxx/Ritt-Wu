@@ -53,7 +53,7 @@ executable Ritt-Wu-exe
       Paths_Ritt_Wu
   hs-source-dirs:
       app
-  ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -O2
+  ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -O2 -fprof-auto
   build-depends:
                           Ritt-Wu
                 , algebra
@@ -74,7 +74,7 @@ test-suite Ritt-Wu-test
       Paths_Ritt_Wu
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts  -fprof-auto "-with-rtsopts=-N -p -s -h -i0.1"
   build-depends:
                           Ritt-Wu
                 , base >=4.7 && <5
@@ -91,10 +91,10 @@ test-suite Ritt-Wu-test
 benchmark Ritt-Wu-benchmark
  type: exitcode-stdio-1.0
  hs-source-dirs: bench
- main-is:             Monomial.hs
+ main-is:             Benchmarking.hs
  other-modules:
       Paths_Ritt_Wu
- ghc-options:  -Wall -rtsopts -threaded  -with-rtsopts=-N -freverse-errors -O2
+ ghc-options:  -Wall -fprof-auto  "-with-rtsopts= -p -s -h -i0.1"  -rtsopts   -freverse-errors -O2
  build-depends:
                          Ritt-Wu
                , algebra

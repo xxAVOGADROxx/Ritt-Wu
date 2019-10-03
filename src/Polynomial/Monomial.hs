@@ -20,6 +20,8 @@ module Polynomial.Monomial
    NFData(..),
    m,
    mp,
+   m',
+   mp'
  )
 where
 import Data.Massiv.Array as A
@@ -52,27 +54,40 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [] = error "A empty term should be represented as m[0]"
+m [] = error "A empxty term should be represented as m[0]"
 m xs = Mon $ makeVectorR D Par (Sz $ length xs) (xs !!)
+-----------------------------------------------------------------------------------------
+-- lex order
+m' :: [Int] -> Mon ord
+m' = m . reverse
 -----------------------------------------------------------------------------------------
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position
 mp :: [Int] -> [Int] -> Mon ord
 mp xs xz
   | lxs /= lxz = error "The size of the position and exponent doesn't correspond"
-  | otherwise =  m $ mp' xs xz 1
+  | otherwise =  m $ mpRev xs xz 1
   where
     lxs = length xs
     lxz = length xz
 
-mp' :: [Int] -> [Int] -> Int -> [Int]
-mp' [] [] _ = []
-mp' (p:ps) (x:xs) n
+mpRev :: [Int] -> [Int] -> Int -> [Int]
+mpRev [] [] _ = []
+mpRev (p:ps) (x:xs) n
   | p == 0 = error "The initial monomial position is 1 not 0"
-  | n /= p = 0 : mp' (p : ps) (x : xs) next
-  | otherwise = x : mp' ps xs next
+  | n /= p = 0 : mpRev (p : ps) (x : xs) next
+  | otherwise = x : mpRev ps xs next
   where
     next = n P.+ 1
+-----------------------------------------------------------------------------------------
+-- lex order
+mp' :: [Int] -> [Int] -> Mon ord
+mp' xs xz
+  | lxs /= lxz = error "The size of the position and exponent doesn't correspond"
+  | otherwise =  m $ reverse (mpRev xs xz 1)
+  where
+    lxs = length xs
+    lxz = length xz
 -----------------------------------------------------------------------------------------
 ------- <<INSTANCES >>--------------
 instance Show (Mon ord) where

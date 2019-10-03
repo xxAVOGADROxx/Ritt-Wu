@@ -1,15 +1,29 @@
 {-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Polynomial.Wu (
-psByTf,
-psByTfLRt,
-psByTfLRtS,
-psByTfLRIO,
+psBsP,
+psBsS,
+
+psBsSParP,
+psBsSParS,
+
+psBsSParn1P,
+
+psBsSSeqS,
+psBsSSeqP,
+
+psBsUParP,
+psBsUParPUpio,
+psBsUParS,
 
 charSet,
 charSetPfPr,
 charSetPfS,
-pall
+
+pallR,
+pallL,
+
+basicSet
                      ) where
 import Control.Scheduler
 import Polynomial.Monomial
@@ -102,12 +116,16 @@ charSet ps
 -----------------------------------------------------------------------------
 -- division of every pk by Bs in PS
 bsDividePs ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePs ps bs = psByTf (red bs ps) bs ++ bs 
+bsDividePs ps bs = psBsP (red bs ps) bs ++ bs 
 -----------------------------------------------------------------------------
 -- auxiliar function that perform the division of each polynomial by the triangular form
 -- polynomial set by triangular form
-psByTf :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psByTf ps bs = [ sprem x bs | x <- ps]
+psBsP :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsP ps bs = [ sprem x bs | x <- ps]
+
+psBsS :: (Fractional t, Ord t, Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsS ps bs = [ sspoly x bs | x <- ps]
+
 ----- *****************************-----------------------
 -- function that paralellism the work
 
@@ -121,15 +139,18 @@ charSetPfPr ps
     a = bsDividePsPF ps  (basicSet ps)
 
 bsDividePsPF ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPF ps bs = psByTfLRt (red bs ps) bs ++ bs  --psByTfLR
+bsDividePsPF ps bs = psBsUParP (red bs ps) bs ++ bs  --psByTfLR
   
 --poly set by  triangular form lehins recomendation
 --psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
 --psByTfLR ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex])
 -- sin embargo no puedo trabajar con IO poly -> IO poly -> IO poly porque IO no es traversable indispensable para traverseConcurrently
-psByTfLRt :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psByTfLRt ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+psBsUParP :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsUParP ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 -- ahora me pide el nfdata pra poly (sin siquiera haberlo puesto en el bench)
+
+psBsUParPUpio :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 
 -------------------------------------PSSSSSSSSSSSSSSSSSSS-------------------------
 -------------------------------------SPPPPPPPPPPPPPPPPPP--------------------------
@@ -142,10 +163,19 @@ charSetPfS ps
     a = bsDividePsPfS ps  (basicSet ps)
 
 bsDividePsPfS ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPfS ps bs = psByTfLRtS (red bs ps) bs ++ bs  --psByTfLR
+bsDividePsPfS ps bs = psBsUParS (red bs ps) bs ++ bs  --psByTfLR
 
-psByTfLRtS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psByTfLRtS ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
+psBsUParS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsUParS ps bs = unsafeLocalState (traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
+
+-- psByTfLRtS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> IO[Poly t Revlex]
+-- psByTfLRtS ps bs =
+--     (traverseConcurrently
+--        Par
+--        (`scheduleWorkId` (\i -> threadDelay 100000 >> pure i))
+--        [sspoly x bs | x <- ps])
+
+-- scheduleId = (`scheduleWorkId` (\ i -> threadDelay 100000 >>  pure i))
 
 -- sucesive pseudo division of a polynomial and a polynomial set (SPOLY)
 sspoly :: (Fractional t, Num t, Eq t, Ord t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
@@ -161,8 +191,25 @@ sspoly rm (b:bs)
 --wrapper ps bs = unsafeDupablePerformIO $ psByTfLRIO ps bs 
 -- Porque la funcion IO nencesita el NFData y no el wrapper ?
 
-psByTfLRIO ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
-psByTfLRIO ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
+psBsSParP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
+psBsSParP ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
+
+psBsSParS ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
+psBsSParS ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] :: IO [Poly Rational Revlex]
+
+
+psBsSSeqP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
+psBsSSeqP ps bs = traverseConcurrently Seq (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
+
+psBsSSeqS ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
+psBsSSeqS ps bs = traverseConcurrently Seq (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] :: IO [Poly Rational Revlex]
+
+psBsSParn1P ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
+psBsSParn1P ps bs = traverseConcurrently (ParN 1) (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
+
+--psByTfLRIOt ::  [Poly t Revlex] -> [Poly t Revlex] -> IO[Poly t Revlex]
+--psByTfLRIOt ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly t Revlex]
+
 
 instance NFData (IO[Poly Rational Revlex]) where
   rnf x = seq x ()
@@ -240,7 +287,17 @@ f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
 
 f3 =
   Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [0])] :: Poly Rational Revlex
-pall = [f1,f2,f3]
+pallR = [f1,f2,f3]
+
+-----------------------------------------------------------------------------------------
+s1 =
+  Poly [Term (1, mp' [2] [2]), Term(-1, m' [1, 1]), Term (-1, m' [0])] :: Poly Rational Revlex
+
+s2 = Poly [Term (1, m' [2]), Term (-2, mp' [3] [1])] :: Poly Rational Revlex
+
+s3 =
+  Poly [Term (1, mp' [3] [2]), Term (-1, m' [1, 1]), Term(1, m' [0])] :: Poly Rational Revlex
+pallL = [s1,s2,s3]
 
 f4 = Poly[Term(3,m[1]), Term(-1, mp[2][1]), Term(-7, m[0])] :: Poly Rational Revlex
 f5 = Poly[Term(2,m[1]), Term(3, mp[2][1]), Term(-1, m[0])]:: Poly Rational Revlex
@@ -251,16 +308,13 @@ f7 =Poly[Term(1,m[1,2]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revl
 
 pall2 = [f6,f7]
 
+-- http://symbolicdata.org/XMLResources/IntPS/Behnke.xml
+a1 = Poly [Term(1,m[7]), Term(-1,mp[2][7])] :: Poly Rational Revlex
+a2 = Poly [Term(1,mp[2][7]), Term(-1,mp[3][7])] :: Poly Rational Revlex
+a3 = Poly [Term(1,mp[3][7]), Term(-1,mp[4][7])] :: Poly Rational Revlex
+a4 = Poly [Term(1,mp[4][7]), Term(-1, mp[5][7])] :: Poly Rational Revlex
+a5 = Poly [Term(1,m[6,1]), Term(1, mp[2,3][6,1]),Term(1, mp[3,4][6,1]), Term(1, mp[4,5][6,1]), Term(1, mp[1,5][1,6]) ] :: Poly Rational Revlex
+ps2= a1 : a2: a3: a4: a5: []
 
-cesc1 = Poly[Term(1, m[3]), Term(4,m[0])] :: Poly Rational Revlex
-cesc2 = Poly [Term(1,m[3]), Term(-4,m[2]), Term(4,m[0])] :: Poly Rational Revlex
-cesc3 = Poly [Term(-16,m[2])] :: Poly Rational Revlex
-
-q = Poly[Term(4, m[1,1]), Term(-1, m[3]), Term(-4,m[0])] :: Poly Rational Revlex
-r = (cesc1 N.* cesc2 ) N.+ cesc3
-p' = Poly[Term(1,m[3]), Term(-4,m[2]), Term(4,m[0])] :: Poly Rational Revlex
-
-p1 = Poly[Term(4,m[1])] :: Poly Rational Revlex
-p2 = Poly [Term(1,m[3,1]), Term(-4,m[2,1]), Term(4,m[0,1]), Term(-4,m[1])]:: Poly Rational Revlex
-
-p  = p1 N.* p2
+ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
+ps1 = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
