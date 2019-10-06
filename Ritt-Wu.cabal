@@ -94,7 +94,7 @@ benchmark Ritt-Wu-benchmark
  main-is:             Benchmarking.hs
  other-modules:
       Paths_Ritt_Wu
- ghc-options:  -Wall -fprof-auto  "-with-rtsopts= -p -s -h -i0.1"  -rtsopts   -freverse-errors -O2
+ ghc-options:  -Wall -fprof-auto  "-with-rtsopts= -p -s -h -i0.1"  -rtsopts   -freverse-errors -O2  -eventlog
  build-depends:
                          Ritt-Wu
                , algebra
