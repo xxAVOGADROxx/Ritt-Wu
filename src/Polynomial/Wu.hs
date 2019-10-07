@@ -16,7 +16,7 @@ psBsUParP,
 psBsUParPUpio,
 psBsUParS,
 
-charSet,
+charSetNormalPS,
 charSetPfPr,
 charSetPfS,
 
@@ -108,12 +108,16 @@ h xs = [ fst x |x <- xs]
 basicSet :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 basicSet xs =  sPLRR (setClassPs xs) []
 -----------------------------------------------------------------------------
-charSet :: [Poly Rational Revlex] -> [Poly Rational Revlex]
-charSet ps
-  | basicSet ps /= ps  = charSet a
-  | otherwise = ps
+charSetNormalPS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetNormalPS ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= [] = charSetPfPr (rs++ bs)
+  | otherwise = bs
   where
-    a = bsDividePs ps  (basicSet ps)
+    rs = bsDividePs ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
 -----------------------------------------------------------------------------
 -- division of every pk by Bs in PS
 bsDividePs ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
@@ -139,7 +143,7 @@ charSetPfPr ps
   | rs /= [] = charSetPfPr (rs++ bs)
   | otherwise = bs
   where
-    rs = bsDividePsPfS ps' bs
+    rs = bsDividePsPF ps' bs
     bs = basicSet ps
     ps' = red bs ps
 
