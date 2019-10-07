@@ -134,13 +134,17 @@ psBsS ps bs = [ sspoly x bs | x <- ps]
 -- characteristic set in parallel computation using pseudo remainder
 charSetPfPr :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 charSetPfPr ps
-  | basicSet ps /= ps  = charSetPfPr a
-  | otherwise = ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= [] = charSetPfPr (rs++ bs)
+  | otherwise = bs
   where
-    a = bsDividePsPF ps  (basicSet ps)
+    rs = bsDividePsPfS ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
 
 bsDividePsPF ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPF ps bs = quitEmptyPoly (psBsUParP (red bs ps) bs) ++ bs  --psByTfLR
+bsDividePsPF ps' bs = quitEmptyPoly (psBsUParP ps' bs)
 
 --poly set by  triangular form lehins recomendation
 --psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
@@ -158,7 +162,8 @@ psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deep
 --characteristic set Parallel Form Spoly
 charSetPfS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 charSetPfS ps
-  | basicSet ps == ps = ps --caso en el que el basic set es igual al set polinomial
+  | bs == ps = ps --caso en el que el basic set es igual al set polinomial
+  | rs == ps' = bs
   | rs /= [] = charSetPfS (rs ++ bs) --caso en el que el basic set es un subconjunto del set polinomial
   | otherwise = bs
   where
@@ -326,10 +331,10 @@ ps2= a1 : a2: a3: a4: a5: []
 ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
 ps1 = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
 
---t1 = Poly [Term(1, m[4])]:: Poly Rational Revlex
-t1 = Poly [Term(1, m[4]), Term(1,m[])]:: Poly Rational Revlex
+t1 = Poly [Term(1, m[4])]:: Poly Rational Revlex
+--t1 = Poly [Term(1, m[4]), Term(1,m[])]:: Poly Rational Revlex
 t2 = Poly [Term(1,m[2])]::Poly Rational Revlex
-t3 = Poly [Term(1,mp[2][2]),Term(1, m[1]) ]::Poly Rational Revlex
+t3 = Poly [Term(1,mp[2][2]),Term(1, m[2]) ]::Poly Rational Revlex
 --t3 = Poly [Term(1,mp[1,2][4,2])]::Poly Rational Revlex
 t4 = Poly [Term(1,mp[3][2])]::Poly Rational Revlex
 pt = [t1,t2,t3,t4]
