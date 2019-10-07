@@ -54,8 +54,10 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [] = error "A empxty term should be represented as m[0]"
-m xs = Mon $ makeVectorR D Par (Sz $ length xs) (xs !!)
+m [0] = Mon $ makeVectorR D Par (Sz 0) id --error "A empty term should be represented as m[]"
+m xs
+  | xs == [] = Mon $ makeVectorR D Par (Sz 0) id
+  | otherwise = Mon $ makeVectorR D Par (Sz $ length xs) (xs !!)
 -----------------------------------------------------------------------------------------
 -- lex order
 m' :: [Int] -> Mon ord
@@ -114,7 +116,7 @@ aux [] (y:yp) = y : aux [] yp
 aux (x:xs) (y:yp) = x P.+ y : aux xs yp
 
 quitZero :: [Int] -> [Int]
-quitZero [0] = [0]
+quitZero [] = []
 quitZero xs
   | last xs == 0 = quitZero $ init xs
   | otherwise = xs

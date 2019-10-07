@@ -69,7 +69,7 @@ ld :: Poly t Revlex -> Int
 ld xp =
   max' $
   P.map
-    last
+    last'
     [ A.toList x
     | x <- P.map (getMon . snd . getT) (getP xp)
     , class' xp == elemsCount x
@@ -79,7 +79,7 @@ ld1 :: Poly t Lex -> Int
 ld1 xp =
   max' $
   P.map
-    last
+    last'
     [ A.toList x
     | x <- P.map (getMon . snd . getT) (getP xp)
     , class' xp == elemsCount x
@@ -93,7 +93,7 @@ ld1 xp =
 lt :: (Eq t) => Poly t Revlex -> Term t Revlex
 lt xp = lmMax' [ x | x <- getP xp, ld xp == f x ]
   where
-    f = last . A.toList . getMon . snd . getT
+    f = last' . A.toList . getMon . snd . getT
 
 lmMax' :: (Eq t )=>[Term t Revlex] -> Term t Revlex
 lmMax' [x] = x
@@ -113,14 +113,14 @@ lm xp =  Term (1, xs)
 initOfv :: (Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv xp = Poly [ g x | x <- getP xp, f x == ld xp && class' xp == h x]
   where
-    f = last . toList . getMon . snd . getT
+    f = last' . toList . getMon . snd . getT
     g = takeInit
     h =  elemsCount . getMon . snd . getT
 
 initOfv' :: (Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv' xp = Poly [x | x <- getP xp, f x == ld xp && class' xp == h x]
   where
-    f = last . toList . getMon . snd . getT
+    f = last' . toList . getMon . snd . getT
     h =  elemsCount . getMon . snd . getT
 
 takeInit :: Term t ord -> Term t ord
@@ -341,6 +341,11 @@ instance (Num t, Eq t) => RightModule Natural (Poly t Revlex) where
 instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
   zero = Poly []
 
+
+last' ::  [Int] -> Int
+last' [] = 0
+last' xs = last xs
+ 
 --------------------------FACTOR-----------------
 -- prime_factors :: Int -> [Int]
 

@@ -61,9 +61,10 @@ quitTuple xs =   [ L.map fst x | x <- xs]
 -- -- a function that search a poly with lower rank and reduced x_i
 -- search Poly Lower Rank and Reduced
 sPLRR ::(Num t, Eq t)=> [[Poly t Revlex]] -> [Poly t Revlex] -> [Poly t Revlex]
-sPLRR (x:xs) [] = sPLRR xs [head $ lDPolys x] 
+sPLRR (x:xs) [] = sPLRR xs [head $ lDPolys x]
 sPLRR [] xp = xp
-sPLRR xs xp 
+sPLRR xs xp
+  | class' (head xp) == 0 = error "Contradictory AS There is (are) constant inside the polynomial set"
   | h  /= Poly[] = sPLRR (tail xs) (h : xp)
   | otherwise = sPLRR (tail xs) xp
   where
@@ -78,9 +79,9 @@ reducedP (x:xs) z
   | otherwise = reducedP xs z
 -----------------------------------------------------------------
 -- izq the entering polynomial, right the forming basic set
--- give two polyomials a b check if a is reduced to b 
+-- give two polyomials a b check if a is reduced to b
 isReduced :: (Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Bool
-isReduced x y 
+isReduced x y
   | degP x (class' y) P.< degP y (class' y) = True
   | otherwise = False
 -----------------------------------------------------------------
@@ -91,7 +92,7 @@ degP xs s = max' [ f x | x <- getP xs, class' (Poly [x]) >= s]
     f x = (toList . getMon . snd . getT) x !! (s P.-1)
 -- search the polynomial (S) with lower degree in a list of polynomials with the same class
 lDPolys :: [Poly t Revlex] -> [Poly t Revlex]
-lDPolys = h .  g . f 
+lDPolys = h .  g . f
 
 f :: [Poly t Revlex] -> [ (Poly t Revlex, Int )]
 f xs = [ (x, ld x)| x <- xs]
@@ -103,7 +104,7 @@ h :: [(Poly t Revlex, Int)]-> [Poly t Revlex]
 h xs = [ fst x |x <- xs]
 -----------------------------------------------------------------------------
 ----------------------------------------------------------------------------
--- take a basic set using the classification class 
+-- take a basic set using the classification class
 basicSet :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 basicSet xs =  sPLRR (setClassPs xs) []
 -----------------------------------------------------------------------------
@@ -116,7 +117,7 @@ charSet ps
 -----------------------------------------------------------------------------
 -- division of every pk by Bs in PS
 bsDividePs ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePs ps bs = psBsP (red bs ps) bs ++ bs 
+bsDividePs ps bs = psBsP (red bs ps) bs ++ bs
 -----------------------------------------------------------------------------
 -- auxiliar function that perform the division of each polynomial by the triangular form
 -- polynomial set by triangular form
@@ -139,8 +140,8 @@ charSetPfPr ps
     a = bsDividePsPF ps  (basicSet ps)
 
 bsDividePsPF ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPF ps bs = psBsUParP (red bs ps) bs ++ bs  --psByTfLR
-  
+bsDividePsPF ps bs = quitEmptyPoly (psBsUParP (red bs ps) bs) ++ bs  --psByTfLR
+
 --poly set by  triangular form lehins recomendation
 --psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
 --psByTfLR ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex])
@@ -157,13 +158,19 @@ psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deep
 --characteristic set Parallel Form Spoly
 charSetPfS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 charSetPfS ps
-  | basicSet ps /= ps  = charSetPfS a
-  | otherwise = ps
+  | basicSet ps == ps = ps --caso en el que el basic set es igual al set polinomial
+  | rs /= [] = charSetPfS (rs ++ bs) --caso en el que el basic set es un subconjunto del set polinomial
+  | otherwise = bs
   where
-    a = bsDividePsPfS ps  (basicSet ps)
+    rs = bsDividePsPfS ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
 
 bsDividePsPfS ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPfS ps bs = psBsUParS (red bs ps) bs ++ bs  --psByTfLR
+bsDividePsPfS ps' bs = quitEmptyPoly (psBsUParS ps' bs)
+
+quitEmptyPoly :: (Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]
+quitEmptyPoly xs = [ x | x <- xs, x /= Poly[]]
 
 psBsUParS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 psBsUParS ps bs = unsafeLocalState (traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
@@ -188,7 +195,7 @@ sspoly rm (b:bs)
 
 -------------------------------------SPPPPPPPPPPPPPPPPPP-------------------------------
 --wrapper ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
---wrapper ps bs = unsafeDupablePerformIO $ psByTfLRIO ps bs 
+--wrapper ps bs = unsafeDupablePerformIO $ psByTfLRIO ps bs
 -- Porque la funcion IO nencesita el NFData y no el wrapper ?
 
 psBsSParP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
@@ -217,14 +224,14 @@ instance NFData (Poly t Revlex) where
   rnf x = seq x ()
 -- psByTfPM :: (Num t, Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]-> IO [Poly t Revlex]
 -- psByTfPM ps bs = withScheduler Par $ \x -> do
---   p <- ps 
+--   p <- ps
 --   scheduleWork x $ pure (sprem p bs )
 
 --psByTfP :: (Num t, Eq t) => [Poly t Revlex] -> [Poly t Revlex]-> IO [[Poly t Revlex]]
 --psByTfP ps bs = withScheduler Par $ \x -> scheduleWork x $ pure ([(sprem x) bs | x <- ps]) -- paralelisa?
 
 --psByTfPR :: (Num t, Eq t) => [Poly t Revlex] -> [Poly t Revlex]-> IO [[Poly t Revlex]]
---psByTfPR ps bs = withScheduler Par $ \x -> replicateM (length ps) $ scheduleWork x $ pure ([(sprem x) bs | x <- ps]) -- replica one single work 
+--psByTfPR ps bs = withScheduler Par $ \x -> replicateM (length ps) $ scheduleWork x $ pure ([(sprem x) bs | x <- ps]) -- replica one single work
 
 --psByTfPS :: (Num t, Eq t) => [Poly t Revlex] -> [Poly t Revlex]-> IO [Poly t Revlex]
 --psByTfPS ps bs = withScheduler Par $ \x -> do scheduleWork x $ pure ( sprem (ps !! 0) bs )
@@ -272,7 +279,7 @@ red xs xp = foldl (flip delete) xp xs
 -- f1 = Poly [Term(1,mp[1,4][1,2]), Term(1,mp[4][2]), Term(-1,mp[1,2,4][1,1,1]), Term(-1,mp[2,4][1,1]), Term(1,m[1,1]), Term(3, mp[2][1])] :: Poly Rational Revlex; f2 = Poly [Term(1,mp[1,4][1,1]), Term(1,mp[3][1]), Term(-1,m[1,1])] :: Poly Rational Revlex; f3 = Poly [Term(1,mp[3,4][1,1]), Term(-2,mp[2][2]),Term(-1,m[1,1]),Term(-1,m[0])] :: Poly Rational Revlex; f4 = prem f1 f2
 -- asc
 -- f1 = Poly [Term(1,m[5])] :: Poly Rational Revlex; f2 = Poly [Term(1,m[6]), Term(1,mp[2][1])] :: Poly Rational Revlex; f4 = Poly [Term(1,m[1]),Term(1,mp[2][3])]; f3 = Poly[Term(1,m[2])]  :: Poly Rational Revlex
--- lower = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])], Poly[Term(1, mp[2][3]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] 
+-- lower = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])], Poly[Term(1, mp[2][3]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]]
 
 -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])] :: Poly Rational Revlex; c2 = Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])] :: Poly Rational Revlex; c3 =  Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] :: Poly Rational Revlex
 -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[5])], Poly[Term(6,m[7])], Poly[Term(10,m[3])]] :: [Poly Rational Revlex]; c2 = [Poly[Term(4, mp[1,2][2,1])],Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3,mp[1,2][3,4])]] :: [Poly Rational Revlex]; c3 = [Poly[Term(3, mp[3][11]), Term(4, mp[1][2])], Poly[Term(3, mp[3][10])], Poly [Term(5,mp[1,2,3][1,0,7])]] :: [Poly Rational Revlex]
@@ -281,12 +288,12 @@ red xs xp = foldl (flip delete) xp xs
 -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])]] :: [Poly Rational Revlex]; c2 = [Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3,mp[1,2][1,1])]] :: [Poly Rational Revlex]; c3 = [Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] :: [Poly Rational Revlex]; ps = concat $ c1:c2:c3:[]
 
 f1 =
-  Poly [Term (1, mp [2] [2]), Term (-1, m [1, 1]), Term (-1, m [0])] :: Poly Rational Revlex
+  Poly [Term (1, mp [2] [2]), Term (-1, m [1, 1]), Term (-1, m [])] :: Poly Rational Revlex
 
 f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
 
 f3 =
-  Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [0])] :: Poly Rational Revlex
+  Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [])] :: Poly Rational Revlex
 pallR = [f1,f2,f3]
 
 -----------------------------------------------------------------------------------------
@@ -299,8 +306,8 @@ s3 =
   Poly [Term (1, mp' [3] [2]), Term (-1, m' [1, 1]), Term(1, m' [0])] :: Poly Rational Revlex
 pallL = [s1,s2,s3]
 
-f4 = Poly[Term(3,m[1]), Term(-1, mp[2][1]), Term(-7, m[0])] :: Poly Rational Revlex
-f5 = Poly[Term(2,m[1]), Term(3, mp[2][1]), Term(-1, m[0])]:: Poly Rational Revlex
+f4 = Poly[Term(3,m[1]), Term(-1, mp[2][1]), Term(-7, m[])] :: Poly Rational Revlex
+f5 = Poly[Term(2,m[1]), Term(3, mp[2][1]), Term(-1, m[])]:: Poly Rational Revlex
 pall1= [f4,f5]
 
 f6 =Poly[Term(1,m[1,1]), Term(1, m[1]), Term(1, mp[2][1])] :: Poly Rational Revlex
@@ -318,3 +325,11 @@ ps2= a1 : a2: a3: a4: a5: []
 
 ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
 ps1 = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
+
+--t1 = Poly [Term(1, m[4])]:: Poly Rational Revlex
+t1 = Poly [Term(1, m[4]), Term(1,m[])]:: Poly Rational Revlex
+t2 = Poly [Term(1,m[2])]::Poly Rational Revlex
+t3 = Poly [Term(1,mp[2][2]),Term(1, m[1]) ]::Poly Rational Revlex
+--t3 = Poly [Term(1,mp[1,2][4,2])]::Poly Rational Revlex
+t4 = Poly [Term(1,mp[3][2])]::Poly Rational Revlex
+pt = [t1,t2,t3,t4]
