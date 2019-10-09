@@ -1,8 +1,8 @@
 {-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Polynomial.Wu (
-psBsP,
-psBsS,
+psBsPS,
+psBsSParS,
 
 psBsSParP,
 psBsSParS,
@@ -16,9 +16,15 @@ psBsUParP,
 psBsUParPUpio,
 psBsUParS,
 
+charSetNormalSP,
 charSetNormalPS,
-charSetPfPr,
-charSetPfS,
+
+charSetMSP,
+charSetMPS,
+
+charSetMSeqSP,
+charSetMSeqPS,
+
 
 pallR,
 pallL,
@@ -53,6 +59,33 @@ sortGrupPolyClass xs = groupBy (on (==) snd) $  sortBy (on compare snd) xs
 
 quitTuple ::  [[ (Poly t Revlex, Int )]] -> [[Poly t Revlex]]
 quitTuple xs =   [ L.map fst x | x <- xs]
+
+-- sucesive pseudo division of a polynomial and a polynomial set (SPOLY)
+sspoly :: (Fractional t, Num t, Eq t, Ord t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
+sspoly rm [] = rm
+sspoly rm (b:bs)
+  | a /= Poly [] = sspoly a bs
+  | otherwise = Poly[]
+  where
+    a = spoly rm b
+
+-- sucesive pseudo division of a polynomial and a polynomial set
+sprem :: (Num t, Eq t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
+sprem rm [] = rm
+sprem rm (b:bs)
+  | a /= Poly [] = sprem a bs
+  | otherwise = Poly[]
+  where
+    a = prem rm b
+
+-- reducction of two list of  polynomials
+red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+red xs xp = foldl (flip delete) xp xs
+
+-- Monad IO division
+psBsUParPUpio :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+
 -----------------------------------------------------------------------------
 -- take a Basic Set BS from a PS (but only lower rank )
 -- basicSet' :: (Num t, Eq t) => [[Poly t Revlex]] -> [Poly t Revlex]
@@ -103,117 +136,138 @@ g xs =  head $  groupBy (\(a, b) (c, d) -> (==) b d) $ sortBy (on compare snd) x
 h :: [(Poly t Revlex, Int)]-> [Poly t Revlex]
 h xs = [ fst x |x <- xs]
 -----------------------------------------------------------------------------
+quitEmptyPoly :: (Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]
+quitEmptyPoly xs = [ x | x <- xs, x /= Poly[]]
 ----------------------------------------------------------------------------
 -- take a basic set using the classification class
 basicSet :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 basicSet xs =  sPLRR (setClassPs xs) []
------------------------------------------------------------------------------
+-- ////////////////////////////////////////////////////////////////////////////////////////////////////
+--begin: char Set Normal PS---------------------------------------------------------------------------
 charSetNormalPS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
 charSetNormalPS ps
   | bs == ps = ps
   | rs == ps' = bs
-  | rs /= [] = charSetPfPr (rs++ bs)
+  | rs /= [] = charSetNormalPS (rs++ bs)
   | otherwise = bs
   where
-    rs = bsDividePs ps' bs
+    rs = bsDividePsPS ps' bs
     bs = basicSet ps
     ps' = red bs ps
------------------------------------------------------------------------------
--- division of every pk by Bs in PS
-bsDividePs ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePs ps bs = psBsP (red bs ps) bs ++ bs
------------------------------------------------------------------------------
--- auxiliar function that perform the division of each polynomial by the triangular form
--- polynomial set by triangular form
-psBsP :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsP ps bs = [ sprem x bs | x <- ps]
+---------------------------------------------------------------------------------------------------
+bsDividePsPS ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsPS ps' bs = quitEmptyPoly (psBsPS ps' bs)
+----------------------------------------------------------------------------------------------------
+psBsPS :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsPS ps bs = [ sprem x bs | x <- ps]
 
+--end: char Set Normal PS--------------------------------------------------------------------------
+--begin: char Set Normal SP-------------------------------------------------------------------------
+charSetNormalSP :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetNormalSP ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= [] = charSetNormalSP (rs++ bs)
+  | otherwise = bs
+  where
+    rs = bsDividePsSP ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
+----------------------------------------------------------------------------------------------------
+bsDividePsSP ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsSP ps' bs = quitEmptyPoly (psBsS ps' bs)
+----------------------------------------------------------------------------------------------------
 psBsS :: (Fractional t, Ord t, Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 psBsS ps bs = [ sspoly x bs | x <- ps]
 
 ----- *****************************-----------------------
--- function that paralellism the work
-
----------------------------PSSSSSSSSSSSSSSSSSSS------------
+-- begin: char Set parallel division PS
 -- characteristic set in parallel computation using pseudo remainder
-charSetPfPr :: [Poly Rational Revlex] -> [Poly Rational Revlex]
-charSetPfPr ps
+charSetMPS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetMPS ps
   | bs == ps = ps
   | rs == ps' = bs
-  | rs /= [] = charSetPfPr (rs++ bs)
+  | rs /= [] = charSetMPS (rs++ bs)
   | otherwise = bs
   where
-    rs = bsDividePsPF ps' bs
+    rs = bsDividePsMPS ps' bs
     bs = basicSet ps
     ps' = red bs ps
 
-bsDividePsPF ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPF ps' bs = quitEmptyPoly (psBsUParP ps' bs)
-
---poly set by  triangular form lehins recomendation
---psByTfLR ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
---psByTfLR ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex])
--- sin embargo no puedo trabajar con IO poly -> IO poly -> IO poly porque IO no es traversable indispensable para traverseConcurrently
+bsDividePsMPS ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
+----------------------------------------------------------------------------------------------------
 psBsUParP :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsUParP ps bs =  unsafeLocalState ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 -- ahora me pide el nfdata pra poly (sin siquiera haberlo puesto en el bench)
+--end : char Ser parallel division PS--------------------------------------------------------------------------------------------------
 
-psBsUParPUpio :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
-
--------------------------------------PSSSSSSSSSSSSSSSSSSS-------------------------
--------------------------------------SPPPPPPPPPPPPPPPPPP--------------------------
---characteristic set Parallel Form Spoly
-charSetPfS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
-charSetPfS ps
+--begin: characteristic set Parallel division Spoly
+charSetMSP :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetMSP ps
   | bs == ps = ps --caso en el que el basic set es igual al set polinomial
   | rs == ps' = bs
-  | rs /= [] = charSetPfS (rs ++ bs) --caso en el que el basic set es un subconjunto del set polinomial
+  | rs /= [] = charSetMSP (rs ++ bs) --caso en el que el basic set es un subconjunto del set polinomial
   | otherwise = bs
   where
-    rs = bsDividePsPfS ps' bs
+    rs = bsDividePsMSP ps' bs
     bs = basicSet ps
     ps' = red bs ps
 
-bsDividePsPfS ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsPfS ps' bs = quitEmptyPoly (psBsUParS ps' bs)
-
-quitEmptyPoly :: (Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]
-quitEmptyPoly xs = [ x | x <- xs, x /= Poly[]]
+bsDividePsMSP ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsMSP ps' bs = quitEmptyPoly (psBsUParS ps' bs)
 
 psBsUParS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsUParS ps bs = unsafeLocalState (traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
+psBsUParS ps bs = unsafePerformIO (traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
 
--- psByTfLRtS :: (Fractional t, Num t, Eq t, Ord t) =>[Poly t Revlex] -> [Poly t Revlex] -> IO[Poly t Revlex]
--- psByTfLRtS ps bs =
---     (traverseConcurrently
---        Par
---        (`scheduleWorkId` (\i -> threadDelay 100000 >> pure i))
---        [sspoly x bs | x <- ps])
-
--- scheduleId = (`scheduleWorkId` (\ i -> threadDelay 100000 >>  pure i))
-
--- sucesive pseudo division of a polynomial and a polynomial set (SPOLY)
-sspoly :: (Fractional t, Num t, Eq t, Ord t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
-sspoly rm [] = rm
-sspoly rm (b:bs)
-  | a /= Poly [] = sspoly a bs
-  | otherwise = Poly[]
+----- *****************************-----------------------
+-- charSet sequetial computation
+--begin: char set sequential PS---------------------------------------------------------------------
+charSetMSeqPS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetMSeqPS ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= [] = charSetMSeqPS (rs ++ bs)
+  | otherwise = bs
   where
-    a = spoly rm b
+    rs = bsDividePsMseqPS ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
+-------------------------------------------------------------------------------------------------
+bsDividePsMseqPS ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsMseqPS ps' bs = quitEmptyPoly (psBsSeqPS ps' bs )
+---------------------------------------------------------------------------------------------------
+psBsSeqPS :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsSeqPS ps bs =  unsafePerformIO ( traverseConcurrently Seq (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+--end: char set sequential PS-------------------------------------------------------------
+--begin: char set sequential SP--------------------------------------------------------------------------------------------------
+charSetMSeqSP :: [Poly Rational Revlex] -> [Poly Rational Revlex]
+charSetMSeqSP ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= [] = charSetMSeqSP (rs++ bs)
+  | otherwise = bs
+  where
+    rs = bsDividePsSP ps' bs
+    bs = basicSet ps
+    ps' = red bs ps
+-----------------------------------------------------------------------------
+bsDividePsMseqSP ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+bsDividePsMseqSP ps' bs = quitEmptyPoly (psBsSeqSP ps' bs)
+----------------------------------------------------------------------------------------------------
+psBsSeqSP :: (Fractional t, Ord t, Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsSeqSP ps bs =  unsafePerformIO ( traverseConcurrently Seq (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] )
+--end: charset sequential SP
+-- **********************************************************************
 
--------------------------------------SPPPPPPPPPPPPPPPPPP-------------------------------
---wrapper ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> [Poly Rational Revlex]
---wrapper ps bs = unsafeDupablePerformIO $ psByTfLRIO ps bs
--- Porque la funcion IO nencesita el NFData y no el wrapper ?
-
+-- parallel division pure IO
 psBsSParP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 psBsSParP ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
 
 psBsSParS ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 psBsSParS ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] :: IO [Poly Rational Revlex]
 
-
+-- sequential division pure IO 
 psBsSSeqP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 psBsSSeqP ps bs = traverseConcurrently Seq (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
 
@@ -222,10 +276,6 @@ psBsSSeqS ps bs = traverseConcurrently Seq (\p -> p `deepseq` pure p) [sspoly  x
 
 psBsSParn1P ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 psBsSParn1P ps bs = traverseConcurrently (ParN 1) (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
-
---psByTfLRIOt ::  [Poly t Revlex] -> [Poly t Revlex] -> IO[Poly t Revlex]
---psByTfLRIOt ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly t Revlex]
-
 
 instance NFData (IO[Poly Rational Revlex]) where
   rnf x = seq x ()
@@ -260,18 +310,7 @@ instance NFData (Poly t Revlex) where
 --     scheduleWork x $ pure (L.foldl' (P.+) 0 [0 .. div a 2])
 --     scheduleWork x $ pure (L.foldl' (P.+) 0 [div a 2  .. a])
 ---------------- ************** -----------------------------
--- sucesive pseudo division of a polynomial and a polynomial set
-sprem :: (Num t, Eq t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
-sprem rm [] = rm
-sprem rm (b:bs)
-  | a /= Poly [] = sprem a bs
-  | otherwise = Poly[]
-  where
-    a = prem rm b
 -----------------------------------------------------------------------------
--- reducction of two list of  polynomials
-red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-red xs xp = foldl (flip delete) xp xs
 --red [] xp = xp
 --red (x:xs) xp = red xs (delete x xp)
 -----------------------------------------------------------------------------

@@ -23,7 +23,7 @@ main :: [Poly Rational Revlex]
 main = do
   --charSetPfS ps1
   --charSetPfS pall
-  charSetPfPr pall
+  charSetPfPr pallR
  
 
 
