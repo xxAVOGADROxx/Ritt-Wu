@@ -4,26 +4,30 @@ import Polynomial.Polynomial
 import Polynomial.Monomial
 import Polynomial.Terms
 
--- http://symbolicdata.org/XMLResources/IntPS/Behnke.xml
-a1 = Poly [Term(1,m[7]), Term(-1,mp[2][7])] :: Poly Rational Revlex
-a2 = Poly [Term(1,mp[2][7]), Term(-1,mp[3][7])] :: Poly Rational Revlex
-a3 = Poly [Term(1,mp[3][7]), Term(-1,mp[4][7])] :: Poly Rational Revlex
-a4 = Poly [Term(1,mp[4][7]), Term(-1, mp[5][7])] :: Poly Rational Revlex
-a5 = Poly [Term(1,m[6,1]), Term(1, mp[2,3][6,1]),Term(1, mp[3,4][6,1]), Term(1, mp[4,5][6,1]), Term(1, mp[1,5][1,6]) ] :: Poly Rational Revlex
-ps1= a1 : a2: a3: a4: a5: []
--- http://symbolicdata.org/XMLResources/IntPS/ZeroDim.example_1.xml
-a6 = Poly [Term(1,m[2]), Term(1, mp[2][2]), Term(-10,m[0])] :: Poly Rational Revlex
-a7 = Poly [Term(1,m[2]), Term(1, m[1,1]), Term(2,mp[2][2]), Term(-16,m[0])] :: Poly Rational Revlex
-ps2 = a6 : a7 :[]
+-- -- http://symbolicdata.org/XMLResources/IntPS/Behnke.xml
+-- a1 = Poly [Term(1,m[7]), Term(-1,mp[2][7])] :: Poly Rational Revlex
+-- a2 = Poly [Term(1,mp[2][7]), Term(-1,mp[3][7])] :: Poly Rational Revlex
+-- a3 = Poly [Term(1,mp[3][7]), Term(-1,mp[4][7])] :: Poly Rational Revlex
+-- a4 = Poly [Term(1,mp[4][7]), Term(-1, mp[5][7])] :: Poly Rational Revlex
+-- a5 = Poly [Term(1,m[6,1]), Term(1, mp[2,3][6,1]),Term(1, mp[3,4][6,1]), Term(1, mp[4,5][6,1]), Term(1, mp[1,5][1,6]) ] :: Poly Rational Revlex
+-- ps1= a1 : a2: a3: a4: a5: []
+-- -- http://symbolicdata.org/XMLResources/IntPS/ZeroDim.example_1.xml
+-- a6 = Poly [Term(1,m[2]), Term(1, mp[2][2]), Term(-10,m[0])] :: Poly Rational Revlex
+-- a7 = Poly [Term(1,m[2]), Term(1, m[1,1]), Term(2,mp[2][2]), Term(-16,m[0])] :: Poly Rational Revlex
+-- ps2 = a6 : a7 :[]
 
-
+a6 = Poly [ Term(1,mp[2][1]), Term(1,mp[3][2]), Term(1,mp[4][2]), Term(-1,m[2]) ] :: Poly Rational Revlex
+a7 = Poly [Term(1,mp[2,3][1,1]), Term(1,mp[4][2]), Term(-1,m[])] :: Poly Rational Revlex
+a8 = Poly [Term(1,mp[2,3,4][1,1,1]), Term(-1,mp[2][2]), Term(-1,mp[3][2]), Term(-1,mp[4][1]), Term(1,m[])] :: Poly Rational Revlex
+ps2 = a6 : a7: a8 : []
 
 
 main :: [Poly Rational Revlex]
 main = do
   --charSetPfS ps1
   --charSetPfS pall
-  charSetPfPr pallR
+  --charSetPfPr pallR
+  charSetNormalPS ps2
  
 
 

@@ -1,21 +1,21 @@
 {-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Polynomial.Wu (
+-- *Division
 psBsPS,
-psBsSParS,
-
-psBsSParP,
-psBsSParS,
-
-psBsSParn1P,
-
-psBsSSeqS,
-psBsSSeqP,
-
+psBsSP,
+--par
 psBsUParP,
-psBsUParPUpio,
 psBsUParS,
+--seq
+psBsSeqPS,
+psBsSeqSP,
 
+-- pure IO
+--psBsSParP,
+--psBsUParPUpio,
+
+-- * char Set
 charSetNormalSP,
 charSetNormalPS,
 
@@ -27,7 +27,6 @@ charSetMSeqPS,
 
 
 pallR,
-pallL,
 
 basicSet
                      ) where
@@ -159,7 +158,7 @@ bsDividePsPS ::(Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Rev
 bsDividePsPS ps' bs = quitEmptyPoly (psBsPS ps' bs)
 ----------------------------------------------------------------------------------------------------
 psBsPS :: (Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsPS ps bs = [ sprem x bs | x <- ps]
+psBsPS ps bs = [ force (sprem x bs) | x <- ps]
 
 --end: char Set Normal PS--------------------------------------------------------------------------
 --begin: char Set Normal SP-------------------------------------------------------------------------
@@ -172,13 +171,14 @@ charSetNormalSP ps
   where
     rs = bsDividePsSP ps' bs
     bs = basicSet ps
-    ps' = red bs ps
+    ps'
+      = red bs ps
 ----------------------------------------------------------------------------------------------------
 bsDividePsSP ::(Fractional t, Ord t, Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-bsDividePsSP ps' bs = quitEmptyPoly (psBsS ps' bs)
+bsDividePsSP ps' bs = quitEmptyPoly (psBsSP ps' bs)
 ----------------------------------------------------------------------------------------------------
-psBsS :: (Fractional t, Ord t, Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsS ps bs = [ sspoly x bs | x <- ps]
+psBsSP :: (Fractional t, Ord t, Num t, Eq t)=>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsSP ps bs = [ force (sspoly x bs) | x <- ps]
 
 ----- *****************************-----------------------
 -- begin: char Set parallel division PS
@@ -198,7 +198,10 @@ bsDividePsMPS ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t R
 bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
 ----------------------------------------------------------------------------------------------------
 psBsUParP :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
-psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+--psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN 4) (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
+psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently Par (pure $!) [sprem  x bs | x <- ps] )
+--psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN $ fromIntegral (length ps)) (\p -> myThreadId >>= print >> pure p) [sprem  x bs | x <- ps] )
+laia ps bs =  unsafePerformIO ( traverseConcurrently (Par) (\p -> myThreadId >>= print >> pure p) [div  x bs | x <- ps] )
 -- ahora me pide el nfdata pra poly (sin siquiera haberlo puesto en el bench)
 --end : char Ser parallel division PS--------------------------------------------------------------------------------------------------
 
