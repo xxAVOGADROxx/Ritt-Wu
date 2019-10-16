@@ -42,7 +42,7 @@ library
                 -- , containers >= 0.6.0.1
                 , criterion -any
                 , deepseq >= 1.4.4.0
-                , massiv == 0.4.0.0
+                , massiv == 0.4.2.0
                 , scheduler >= 1.4.2
                 , sscript -any
   default-language: Haskell2010

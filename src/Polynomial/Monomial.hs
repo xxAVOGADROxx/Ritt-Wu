@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-|
@@ -20,8 +23,8 @@ module Polynomial.Monomial
    NFData(..),
    m,
    mp,
-   m',
-   mp'
+--   m',
+--   mp'
  )
 where
 import Data.Massiv.Array as A
@@ -30,19 +33,20 @@ import Data.Char.SScript
 import Numeric.Algebra as N
 import Data.Function
 import Control.DeepSeq
---import GHC.Generics (Generic, Generic1)
-
+import GHC.Generics (Generic, Generic1)
+  
 
 -- | Array monomial with representation r
-type DelayArray   = Array D Ix1 Int
+--type DelayArray   = Array D Ix1 Int
+--type DelayArray = Array P Ix1 Int
 -- The above representation need to know the representation (r) of array.
 
 -- | A wrapper for monomials with a certain (monomial) order
-newtype Mon ord =
-  Mon
-  { getMon :: DelayArray
-    }
-  deriving (Eq)
+newtype Mon ord = Mon (Array P Ix1 Int)
+  deriving (Generic, NFData, Eq)
+
+--instance NFData (Mon ord) where
+--  rnf x = seq x ()
 
 -- * Names for orderings.
 --   We didn't choose to define one single type for ordering names for the extensibility.
@@ -54,14 +58,13 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [0] = Mon $ makeVectorR D Par (Sz 0) id --error "A empty term should be represented as m[]"
-m xs
-  | xs == [] = Mon $ makeVectorR D Par (Sz 0) id
-  | otherwise = Mon $ makeVectorR D Par (Sz $ length xs) (xs !!)
------------------------------------------------------------------------------------------
+m [] = Mon $ A.fromList Seq [] 
+m [0] = Mon $ A.fromList Seq [] --error "A empty term should be represented as m[]"
+m xs = Mon $ A.fromList Seq xs 
+-----------------------------A------------------------------------------------------------
 -- lex order
-m' :: [Int] -> Mon ord
-m' = m . reverse
+--m' :: [Int] -> Mon ord
+--m' = m . reverse
 -----------------------------------------------------------------------------------------
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position
@@ -83,17 +86,17 @@ mpRev (p:ps) (x:xs) n
     next = n P.+ 1
 -----------------------------------------------------------------------------------------
 -- lex order
-mp' :: [Int] -> [Int] -> Mon ord
-mp' xs xz
-  | lxs /= lxz = error "The size of the position and exponent doesn't correspond"
-  | otherwise =  m $ reverse (mpRev xs xz 1)
-  where
-    lxs = length xs
-    lxz = length xz
+-- mp' :: [Int] -> [Int] -> Mon ord
+-- mp' xs xz
+--   | lxs /= lxz = error "The size of the position and exponent doesn't correspond"
+--   | otherwise =  m $ reverse (mpRev xs xz 1)
+--   where
+--     lxs = length xs
+--     lxz = length xz
 -----------------------------------------------------------------------------------------
 ------- <<INSTANCES >>--------------
 instance Show (Mon ord) where
-  show m = formatSS $ showMon (A.toList (getMon m)) 1
+  show (Mon m) = formatSS $ showMon (A.toList m) 1
 
 showMon :: (Num a, Eq a, Ord a, Show a) => [a] -> Int -> String
 showMon [] _ = ""
@@ -107,7 +110,7 @@ showMon (x:xs) s
     printMon = showMon xs (next s)
 ---------------------------------------------------------------------------------------
 instance Multiplicative (Mon ord) where
-  (*) xs xz = m (quitZero $ on aux (toList . getMon) xs xz)
+  (*) (Mon n) (Mon n') = m (quitZero $ on aux toList n n')
 
 aux :: [Int] -> [Int] -> [Int]
 aux [] [] = []
@@ -122,7 +125,7 @@ quitZero xs
   | otherwise = xs
 ---------------------------------------------------------------------------------------
 instance Division (Mon ord) where
-  (/) xs xz = m (quitZero $on aux' (toList . getMon) xs xz)
+  (/) (Mon n) (Mon n') = m (quitZero $ on aux' (A.toList) n n')
 
 aux' :: [Int] -> [Int] -> [Int]
 aux' [] [] = []
@@ -130,9 +133,9 @@ aux' (x:xs) [] = x : aux' xs []
 aux' [] (y:yp) = y : aux' [] yp
 aux' (x:xs) (y:yp) = x P.- y : aux' xs yp
 
----------------------------------------------------------------------------------------
+---------------------------------------pal mar------------------------------------------------
 instance Additive (Mon ord) where
-  (+) xs xz = Mon $ on verificationMl getMon xs xz
+  (+) (Mon m)(Mon m') = Mon $ verificationMl m m'
 ---------------------------------------------------------------------------------------
 instance Semiring (Mon ord)
 instance Abelian (Mon ord)
@@ -148,15 +151,13 @@ instance RightModule Natural (Mon ord) where
   (*.) = undefined
 ---------------------------------------------------------------------------------------
 instance Group (Mon ord) where
-  (-) xs xz = Mon $ on verificationMl getMon xs xz
+  (-) (Mon m)(Mon m') = Mon $ verificationMl m m'
 
-verificationMl :: DelayArray -> DelayArray -> DelayArray
+verificationMl :: Array P Ix1 Int -> Array P Ix1 Int -> Array P Ix1 Int
 verificationMl xs xz
   | xs == xz = xs
   | otherwise = error "The monomial doesn't match " 
 ---------------------------------------------------------------------------------------
-instance NFData (Mon ord) where
-  rnf x = seq x ()
   -- sujeto a revision cunado se realize la diviision
   -- polynomial, delay es el mas optimo porque no se realizan
   -- operaciones "estrictas sobre los monomios"
@@ -173,9 +174,9 @@ instance NFData (Mon ord) where
 -- λ> 
 ---------------------------------------------------------------------------------------
 instance Ord (Mon Lex) where
-  compare = on lex' (toList . getMon)
-  (>) = on (P.>) (toList . getMon)
-  (<) = on (P.<) (toList . getMon)
+  compare (Mon m)(Mon m') = on lex' A.toList m m'
+  (>) (Mon m)(Mon m')= on (P.>) A.toList m m' 
+  (<) (Mon m)(Mon m')= on (P.<) A.toList m m'
 
 lex' :: (Num a, Eq a, Ord a) => [a] -> [a] -> Ordering
 lex' [] [] = EQ
@@ -187,10 +188,10 @@ lex' (x:xs) (y:ys)
   | otherwise = LT
 ---------------------------------------------------------------------------------------
 instance Ord (Mon Revlex) where
-  compare = on revlex' (toList . getMon)
+  compare (Mon m)(Mon m')= on revlex' A.toList m m'
 
 revlex' :: (Num a, Eq a, Ord a) => [a] -> [a] -> Ordering
-revlex' = on lex' reverse
+revlex' = on lex' P.reverse
 ---------------------------------------------------------------------------------------
 instance Unital (Mon ord ) where
   one = undefined --Mon empty
