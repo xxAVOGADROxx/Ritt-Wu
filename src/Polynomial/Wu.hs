@@ -106,9 +106,6 @@ sortGrupPolyClass (PS xs) = PS conversion
 instance (Eq t) => Ord (Idp t ord) where
   compare (Idp poly id)(Idp poly' id') = compare id id'
 
---quitTuple ::  [[ (Poly t Revlex, Int )]] -> [[Poly t Revlex]]
--- quitTuple xs =   [ L.map fst x | x <- xs]
-
 
 -- -- sucesive pseudo division of a polynomial and a polynomial set (SPOLY)
 -- sspoly :: (Fractional t, Num t, Eq t, Ord t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
@@ -119,14 +116,19 @@ instance (Eq t) => Ord (Idp t ord) where
 --   where
 --     a = spoly rm b
 
--- -- sucesive pseudo division of a polynomial and a polynomial set
--- sprem :: (Num t, Eq t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
--- sprem rm [] = rm
--- sprem rm (b:bs)
---   | a /= Poly [] = sprem a bs
---   | otherwise = Poly[]
---   where
---     a = prem rm b
+-- sucesive pseudo division of a polynomial and a polynomial set
+sprem :: (Num t, Eq t) => Idp t Revlex  -> PS t Revlex  -> Idp t Revlex
+sprem (Idp pol id)(PS xs) = Idp (sprem' pol (P.map f (A.toList xs))) 0
+  where
+    f (Idp pol' id') = pol'
+
+sprem' :: (Num t, Eq t) => Poly t Revlex -> [Poly t Revlex] -> Poly t Revlex
+sprem' rm  [] = rm
+sprem' rm (b:bs)
+  | a /= p[] = sprem' a bs
+  | otherwise = p[]
+  where
+    a = prem rm b
 
 -- -- reducction of two list of  polynomials
 -- red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
@@ -250,7 +252,8 @@ instance (Eq t) => Ord (Idp t ord) where
 -- bsDividePsMPS ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 -- bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
 -- ----------------------------------------------------------------------------------------------------
--- psBsUParP :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
+psBsUParP :: (Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t Revlex
+psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sprem  x bs) ps
 -- --psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN 4) (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 -- psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently Par (pure $!) [sprem  x bs | x <- ps] )
 -- --psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN $ fromIntegral (length ps)) (\p -> myThreadId >>= print >> pure p) [sprem  x bs | x <- ps] )
