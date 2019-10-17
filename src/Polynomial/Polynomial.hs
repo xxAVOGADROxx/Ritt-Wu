@@ -1,7 +1,8 @@
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+
 
 module Polynomial.Polynomial
   (
@@ -23,7 +24,8 @@ module Polynomial.Polynomial
     lcmT,
     factor,
     simP,
-    listElimination
+    listElimination,
+    p
   ) where
 import Polynomial.Terms
 import Polynomial.Monomial
@@ -34,17 +36,19 @@ import Numeric.Algebra as N
 import Data.Function -- on
 import Data.Char.SScript
 import Data.List  as L
---import Data.Set
--- newtype Poly t ord =
---   Poly
---     { getP :: [Term t ord]
---     }deriving (Eq)
-newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Eq)
+import Control.DeepSeq
+import GHC.Generics (Generic, Generic1)
+
+
+newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, Eq)
 --p[Term 1 $ m[1,2,3], Term 3 $ m[4,5,6], Term 0 $ m[]] :: Poly Rational Revlex
 --  Term 4 $ m[1,2,3,4] :: Term Rational Revlex
 
+--instance NFData (Poly t  ord) where
+--  rnf x = seq x ()
+
 p :: [Term t ord] -> Poly t ord
-p xs = Poly $ A.fromList Par xs
+p xs = Poly $ A.fromList Seq xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------
@@ -438,8 +442,8 @@ last' xs = last xs
 -- -- repect to y
 f1 = p [Term 1 $ m[2,3] , Term (- 1) $ mp[2][1] ] :: Poly Rational Revlex
 f2 = p [Term 1 $ m[3,1] , Term (- 2) $ m[0] ] :: Poly Rational Revlex
--- asn prem 8x^2 -2x^6
--- poly f1 f2 = 8 -2x⁴
+-- prem 8x^2 -2x^6
+-- poly f1 f2 = 4 -1x⁴
 -- -- poly to taste the initial term
 -- -- f1 = Poly [Term(4,m[2,1]),Term(-1,m[6,1])] :: Poly Int Revlex
 -- -- buchberger example 19

@@ -1,9 +1,4 @@
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Polynomial.Terms
@@ -21,15 +16,14 @@ import Data.Char.SScript
 
 -- | Constraint synonym for rings that can be used as polynomial coefficient.
 
-class (DecidableZero r, Ring r, Commutative r, Eq r) =>   CoeffRing r
-instance (DecidableZero r, Ring r, Commutative r, Eq r) => CoeffRing r
-
 -- data Term k ord =
 --   Term
 --     { getT :: (k , Mon ord)
 --     } deriving (Eq)
 
 data Term k ord = Term !k !(Mon ord) deriving (Eq) -- Term 4 $ m[1,2,3,4] :: Term Rational Revlex
+instance NFData (Term k ord) where
+  rnf x = seq x ()
 
 -- ----------------------<< FUNCTIONS >>--------------------
 -- ----------------------<< INSTANCES >>--------------------
@@ -109,8 +103,6 @@ instance (Num k) => Group (Term k ord) where
 subPol' ::(Num k) => Term k mon -> Term k mon -> Term k mon
 subPol' (Term k mon) (Term k' mon') = Term (k P.- k')( mon N.- mon')
 ----------------------------------------------------------------------------------
-instance NFData (Term k ord) where
-  rnf x = seq x ()
 -------------------------------------------------------------------------------
 --instance Eq (Term k ord) where
 --  (==) = 

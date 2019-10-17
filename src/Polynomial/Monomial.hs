@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-|
 -- Module      : Data.Massiv.Array
@@ -20,7 +19,6 @@ module Polynomial.Monomial
     -- * Classes
 
     -- * Functions
-   NFData(..),
    m,
    mp,
 --   m',
@@ -34,16 +32,10 @@ import Numeric.Algebra as N
 import Data.Function
 import Control.DeepSeq
 import GHC.Generics (Generic, Generic1)
-  
 
--- | Array monomial with representation r
---type DelayArray   = Array D Ix1 Int
---type DelayArray = Array P Ix1 Int
--- The above representation need to know the representation (r) of array.
 
 -- | A wrapper for monomials with a certain (monomial) order
-newtype Mon ord = Mon (Array P Ix1 Int)
-  deriving (Generic, NFData, Eq)
+newtype Mon ord = Mon (Array P Ix1 Int) deriving (Generic, NFData, Eq)
 
 --instance NFData (Mon ord) where
 --  rnf x = seq x ()
