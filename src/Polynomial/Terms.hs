@@ -36,51 +36,24 @@ showMon (Term k mon)
   | otherwise = (formatSS . show) k ++ show mon
 
 -----------------------------------------------------------------------------------------
--- class (CR (Coefficient poly)) =>
---       IsMonomial poly
---   where
---   type Coefficient poly :: *
---   --toMonomial :: (Coefficient poly) -> poly
-  --toMonomial = undefined
-
-
-
--- class ( IsMonomial poly, IsOrderMon (MonOrder poly)) =>
---       IsOrderedMonomial poly
---   where
---   type MonOrder poly :: *
-
--- -------------------------------------------------------------------
--- instance (IsOrderMon ord, CR k) => IsMonomial (Mon k ord) where
---   type Coefficient (Mon k ord) = k
-
--- instance (CR k, IsOrderMon ord) =>
---          IsOrderedMonomial (Mon k ord) where
---   type MonOrder (Mon k ord) = ord
------------------------------------------------------------------------------------------
 instance (Num k) => Additive (Term k ord) where
   (+) xs xp = addPol' xs xp
 
 addPol' :: (Num k) => Term k mon -> Term k mon -> Term k mon
 addPol' (Term k mon) (Term k' mon') = Term (k P.+ k')( mon N.+ mon')
--- addPol' :: (Num k) => (k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
--- addPol' (a, b) (c, d) =(a P.+ c, b N.+ d) --numeric ours newtypes and prel ude defined types
 -----------------------------------------------------------------------------------------
 instance (Num k) => Multiplicative (Term k ord) where
   (*) xs xz = multPol' xs xz
 
 multPol' :: (Num k) => Term k mon -> Term k mon -> Term k mon
 multPol' (Term k mon) (Term k' mon') = Term (k P.* k')( mon N.* mon')
--- multPol' :: (Num k) => (k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
--- multPol' (a, b) (c, d) = (a P.* c, b N.* d)
+
 -----------------------------------------------------------------------------------------
 instance (Fractional k, Num k) => Division (Term k ord) where
   (/) xs xp = divPol' xs xp
 
 divPol'  :: (Fractional k, Num k) => Term k mon -> Term k mon -> Term k mon
 divPol' (Term k mon) (Term k' mon') = Term (k P./ k')( mon N./ mon')
--- -- divPol' :: (Fractional k, Num k )=>(k, Mon ord) -> (k, Mon ord) -> (k, Mon ord)
--- divPol' (a,b) (c,d)= (a P./ c, b N./ d )
 
 instance (Num k) => Unital (Term k ord) where
   one = undefined -- Term (0, one)
@@ -102,7 +75,7 @@ instance (Num k) => Group (Term k ord) where
 
 subPol' ::(Num k) => Term k mon -> Term k mon -> Term k mon
 subPol' (Term k mon) (Term k' mon') = Term (k P.- k')( mon N.- mon')
-----------------------------------------------------------------------------------
+
 -------------------------------------------------------------------------------
 --instance Eq (Term k ord) where
 --  (==) = 
@@ -121,10 +94,3 @@ instance (Eq k)=> Ord (Term k Revlex) where
   compare (Term k mon)(Term k' mon') = compare mon mon'
   (<) (Term k mon)(Term k' mon') = (P.<) mon mon'
   (>) (Term k mon)(Term k' mon') = (P.>) mon mon'  
-
--- λ> a = Term (2,m[5,2,3,2]) :: Term Int Revlex
--- λ> b = Term (2,m[4,2,3,6]) :: Term Int Revlex
--- λ> b P.> a
--- True
--- λ>
----instance Num (Term k ord) 

@@ -297,7 +297,7 @@ showPoly terms =  (concat .  A.toList) $ A.map f terms
   where
     f (Term k mon)
       | k P.> 0 = " + " ++ show k ++ show mon
-      | k P.< 0 = " + " ++ show k ++ show mon
+      | k P.< 0 = " - " ++ show (abs k) ++ show mon
       | otherwise = error "term with empty coefficient k"
 
 -- ---------------------------------------------------------------

@@ -77,26 +77,30 @@ parps xs = ps $ P.map idp xs
 
 -- how write polynomials
 p1 =  p [t 3 [1,2], tp 4 [2,4][1,2], t 4 [1,2] ] :: Poly Rational Revlex
-p2 =  p [t 3 [1,2], tp 4 [2,4][1,2], t 4 [1,2] ] :: Poly Rational Revlex
-example = parps [p1,p2]
+p2 =  p [t 3 [2], t 4 [1] ] :: Poly Rational Revlex
+p3 =  p [t 3 [5,6], t 4 [1] ] :: Poly Rational Revlex
+p4 =  p [t 3 [2,1,2], t 4 [1] ] :: Poly Rational Revlex
+p5 =  p [t 3 [1], t 6 [2] ] :: Poly Rational Revlex
+p6 =  p [t 3 [1,2,3], t 6 [2] ] :: Poly Rational Revlex
+example = parps [p1,p2,p3,p4,p5,p6]
 ----------------------------------------------------------------------------------------------------
 instance (Ord t, Num t, Show t) => Show (PS t ord) where
   show xs = concat $ showPoly xs
-  
+
 showPoly :: (Ord t, Show t, Num t) => PS t ord -> [String]
 showPoly (PS xs) = conv
   where
-    conv = L.map f (A.toList xs)
-    f (Idp poly id) = show poly ++ "<<" ++show id ++ ">>,"
+    conv = L.map (\ x -> showIdp x ++ ",") (A.toList xs)
+    --f (Idp poly id) = show poly ++ "<<" ++show id ++ ">>,"
 ----------------------------------------------------------------------------------------------------
 setClassPs :: (Eq t) =>PS t ord -> PS t ord
 setClassPs =  sortGrupPolyClass . searchPolyClass
 
 searchPolyClass :: PS t ord  -> PS t ord
-searchPolyClass (PS ps) = PS $ A.computeAs N g
+searchPolyClass (PS ps) = PS $ A.computeAs N (A.map f ps)
   where
     f (Idp poly id) = Idp poly (class' poly)
-    g = A.map f ps
+
 
 sortGrupPolyClass :: (Eq t) => PS t ord -> PS t ord
 sortGrupPolyClass (PS xs) = PS conversion
@@ -131,69 +135,90 @@ sprem' rm (b:bs)
     a = prem rm b
 
 -- -- reducction of two list of  polynomials
--- red :: (Eq t) => [Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
--- red xs xp = foldl (flip delete) xp xs
+red :: (Eq t) => PS t ord -> PS t ord -> PS t ord
+red (PS poly)(PS poly') = ps $ on (P.foldl (flip delete)) f poly' poly
+  where
+    f = A.toList
+
 
 -- -- Monad IO division
 -- psBsUParPUpio :: (Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
 -- psBsUParPUpio ps bs =  unsafePerformIO ( traverseConcurrently Par (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 
--- -----------------------------------------------------------------------------
--- -- take a Basic Set BS from a PS (but only lower rank )
--- -- basicSet' :: (Num t, Eq t) => [[Poly t Revlex]] -> [Poly t Revlex]
--- -- basicSet' xs = searchLowerRank xs []
--- ------------------------------------------------
--- -- -- a function that search a poly with lower rank and reduced x_i
--- -- search Poly Lower Rank and Reduced
--- sPLRR ::(Num t, Eq t)=> [[Poly t Revlex]] -> [Poly t Revlex] -> [Poly t Revlex]
--- sPLRR (x:xs) [] = sPLRR xs [head $ lDPolys x]
--- sPLRR [] xp = xp
--- sPLRR xs xp
---   | class' (head xp) == 0 = error "Contradictory AS There is (are) constant inside the polynomial set"
---   | h  /= Poly[] = sPLRR (tail xs) (h : xp)
---   | otherwise = sPLRR (tail xs) xp
---   where
---     f = lDPolys . head
---     h = reducedP (f xs) (head xp)
--- ----------------------------------------------------------------
--- -- check if a given polynomial is reduced with respect to a set
--- reducedP :: (Num t, Eq t)=> [Poly t Revlex] -> Poly t Revlex ->  Poly t Revlex
--- reducedP [] _ = Poly []
--- reducedP (x:xs) z
---   | isReduced x z  = x
---   | otherwise = reducedP xs z
+-----------------------------------------------------------------------------
+-- take a Basic Set BS from a PS (but only lower rank )
+-- basicSet' :: (Num t, Eq t) => [[Poly t Revlex]] -> [Poly t Revlex]
+-- basicSet' xs = searchLowerRank xs []
+------------------------------------------------
+-- -- a function that search a poly with lower rank and reduced x_i
+-- search Poly Lower Rank and Reduced
+groupClass ::(Num t, Eq t)=> PS t ord -> [[Idp t ord]]
+groupClass (PS poly) = (groupBy (on (==) f) $ A.toList poly)
+  where
+    f (Idp pol id) = id
+
+sPLRR :: (Num t, Eq t) => [[Idp t Revlex]] -> [Idp t Revlex] -> PS t Revlex 
+sPLRR (x:xs) [] = sPLRR xs [head $ lDPolys x]
+sPLRR [] xp = ps xp
+sPLRR xs xp 
+  | f (head xp) == 0 = error "Contradictory AS There is (are) constant inside the polynomial set"
+  | h  /= z = sPLRR (tail xs) (h : xp)
+  | otherwise = sPLRR (tail xs) xp
+  where
+    f(Idp poly id) = class' poly
+    g = lDPolys . head
+    h =  reducedP (g xs) (head xp)
+    z = idp (p[])
+
+-- check if a given polynomial is reduced with respect to a set
+reducedP :: (Num t, Eq t)=> [Idp t Revlex] -> Idp t Revlex -> Idp t Revlex
+reducedP [] _ = idp (p[])
+reducedP (x:xs) z 
+  | isReduced x z  = x
+  | otherwise = reducedP xs z
+-----------------------------------------------------------------
+-- izq the entering polynomial, right the forming basic set
+-- give two polyomials a b check if a is reduced to b
+isReduced :: (Eq t, Num t) => Idp t Revlex -> Idp t Revlex -> Bool
+isReduced (Idp poly id) (Idp poly' id')
+  | degP poly (class' poly) P.< degP poly' (class' poly') = True
+  | otherwise = False
 -- -----------------------------------------------------------------
--- -- izq the entering polynomial, right the forming basic set
--- -- give two polyomials a b check if a is reduced to b
--- isReduced :: (Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Bool
--- isReduced x y
---   | degP x (class' y) P.< degP y (class' y) = True
---   | otherwise = False
--- -----------------------------------------------------------------
--- -- compare the degree of two polynomials in a given variable
--- degP :: Poly t Revlex -> Int -> Int
--- degP xs s = max' [ f x | x <- getP xs, class' (Poly [x]) >= s]
---   where
---     f x = (toList . getMon . snd . getT) x !! (s P.-1)
--- -- search the polynomial (S) with lower degree in a list of polynomials with the same class
--- lDPolys :: [Poly t Revlex] -> [Poly t Revlex]
--- lDPolys = h .  g . f
+-- compare the degree of two polynomials in a given variable
+degP :: Poly t Revlex -> Int -> Int
+degP (Poly poly) cls = A.maximum' .  A.map h . A.computeAs N . A.filterS (\x -> f x >= cls) $  poly
+  where
+    f(Term k mon) = A.elemsCount (g mon)
+    g(Mon m) = m
+    h (Term k mon) = (g mon) ! (cls P.-1)
 
--- f :: [Poly t Revlex] -> [ (Poly t Revlex, Int )]
--- f xs = [ (x, ld x)| x <- xs]
+----------------------------------------------------------------------------------------------------
+--search the polynomial (S) with lower degree in a list of polynomials with the same class
+lDPolys :: [Idp t Revlex]-> [Idp t Revlex]
+lDPolys xs = head $ groupBy (on (==) i) (sortBy (on compare i) f) 
+  where
+    f = L.map g xs
+    g (Idp poly id) = Idp poly (ld poly)
+    i (Idp poly id) = id
 
--- g :: [(Poly t Revlex, Int)] -> [(Poly t Revlex, Int) ]
--- g xs =  head $  groupBy (\(a, b) (c, d) -> (==) b d) $ sortBy (on compare snd) xs
+-----------------------------------------------------------------------------
+quitEmptyPoly :: (Eq t) =>  PS t ord -> PS t ord
+quitEmptyPoly (PS pol)= PS $ A.computeAs N $ ( A.filterS (\x -> x /= f) pol)
+  where
+    f = idp $ p[]
+----------------------------------------------------------------------------
 
--- h :: [(Poly t Revlex, Int)]-> [Poly t Revlex]
--- h xs = [ fst x |x <- xs]
--- -----------------------------------------------------------------------------
--- quitEmptyPoly :: (Eq t) =>  [Poly t Revlex] -> [Poly t Revlex]
--- quitEmptyPoly xs = [ x | x <- xs, x /= Poly[]]
--- ----------------------------------------------------------------------------
--- -- take a basic set using the classification class
--- basicSet :: [Poly Rational Revlex] -> [Poly Rational Revlex]
--- basicSet xs =  sPLRR (setClassPs xs) []
+instance (Ord t, Num t, Show t) => Show (Idp t ord) where
+  show xs = showIdp xs
+
+showIdp ::(Ord t, Num t, Show t)=> Idp t ord -> String
+showIdp (Idp poly id) =  show poly ++ "<<" ++show id ++ ">>"
+----------------------------------------------------------------
+-- take a basic set using the classification class
+basicSet :: (Eq t, Num t) => PS t Revlex -> PS t Revlex
+basicSet xs =  sPLRR classify []
+  where
+    classify = groupClass . setClassPs $ xs
 
 
 -- -- ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,20 +262,24 @@ sprem' rm (b:bs)
 
 -- ----- *****************************-----------------------
 -- begin: char Set parallel division PS
--- characteristic set in parallel computation using pseudo remainder
--- charSetMPS :: [Poly Rational Revlex] -> [Poly Rational Revlex]
--- charSetMPS ps
---   | bs == ps = ps
---   | rs == ps' = bs
---   | rs /= [] = charSetMPS (rs++ bs)
---   | otherwise = bs
---   where
---     rs = bsDividePsMPS ps' bs
---     bs = basicSet ps
---     ps' = red bs ps
+--characteristic set in parallel computation using pseudo remainder
+charSetMPS :: (Eq t, Num t) => PS t Revlex -> PS t Revlex 
+charSetMPS ps
+  | bs == ps = ps
+  | rs == ps' = bs
+  | rs /= parps[] = charSetMPS (clean (PS $ A.computeAs N $ on (A.append' 1) f rs bs))
+  | otherwise = bs
+  where
+    rs = clean $ bsDividePsMPS ps' bs
+    bs = clean $ basicSet ps
+    ps' = red bs ps
+    f(PS poly) = poly;
+    clean (PS poly) = PS $ A.computeAs N (A.map g poly);
+    g (Idp poly id)= Idp poly 0
+-- f(PS poly) = poly; clean (PS poly) = PS $ A.computeAs N (A.map g poly); g (Idp poly id)= Idp poly 0
 
--- bsDividePsMPS ::( Num t, Eq t) =>[Poly t Revlex] -> [Poly t Revlex] -> [Poly t Revlex]
--- bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
+bsDividePsMPS ::( Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t Revlex
+bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
 -- ----------------------------------------------------------------------------------------------------
 psBsUParP :: (Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t Revlex
 psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sprem  x bs) ps
@@ -394,14 +423,13 @@ psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sprem  x bs) ps
 -- -- f1 = Poly[Term(1,mp[2][2]), Term(-1, m[1,1]), Term(-1, m[0])] :: Poly Rational Revlex; f2 = Poly[Term(1,m[2]), Term(-2,mp[3][1])] :: Poly Rational Revlex; f3 = Poly[Term(1,mp[3][2]), Term(-1,m[1,1]), Term(1,m[0])] :: Poly Rational Revlex
 -- -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])]] :: [Poly Rational Revlex]; c2 = [Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3,mp[1,2][1,1])]] :: [Poly Rational Revlex]; c3 = [Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] :: [Poly Rational Revlex]; ps = concat $ c1:c2:c3:[]
 
--- f1 =
---   Poly [Term (1, mp [2] [2]), Term (-1, m [1, 1]), Term (-1, m [])] :: Poly Rational Revlex
-
--- f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
-
--- f3 =
---   Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [])] :: Poly Rational Revlex
--- pallR = [f1,f2,f3]
+--f1 = Poly [Term (1, mp [2] [2]), Term (-1, m [1, 1]), Term (-1, m [])] :: Poly Rational Revlex
+f1 = p [tp 1 [2][2], t (-1) [1,1], t (-1) []] :: Poly Rational Revlex
+--f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
+f2 = p[t 1 [2], tp (-2) [3][1]] :: Poly Rational Revlex
+--f3 = Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [])] :: Poly Rational Revlex
+f3 = p [tp 1 [3][2], t (-1) [1,1], t 1 []] :: Poly Rational Revlex
+pall = parps [f1,f2,f3]
 
 -- -----------------------------------------------------------------------------------------
 -- -- s1 =

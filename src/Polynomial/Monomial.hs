@@ -21,8 +21,7 @@ module Polynomial.Monomial
     -- * Functions
    m,
    mp,
---   m',
---   mp'
+
  )
 where
 import Data.Massiv.Array as A
@@ -53,11 +52,7 @@ m :: [Int] -> Mon ord
 m [] = Mon $ A.fromList Seq [] 
 m [0] = Mon $ A.fromList Seq [] --error "A empty term should be represented as m[]"
 m xs = Mon $ A.fromList Seq xs 
------------------------------A------------------------------------------------------------
--- lex order
---m' :: [Int] -> Mon ord
---m' = m . reverse
------------------------------------------------------------------------------------------
+
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position
 mp :: [Int] -> [Int] -> Mon ord
@@ -156,14 +151,7 @@ verificationMl xs xz
   -- si seq evalua sequencial es correcto (verificar)
    -- deberia usar force?
 
--- λ> let xd = m[1,2] N.* m[1,2]
--- λ> force xd
--- x₀²x₁⁴
--- λ> :sprint xd
--- xd = Exp(massiv-0.4.0.0:Data.Massiv.Array.Delayed.Pull.DArray
---                  (ParOn [])
---                  (massiv-0.4.0.0:Data.Massiv.Core.Index.Internal.SafeSz 2) _)
--- λ> 
+
 ---------------------------------------------------------------------------------------
 instance Ord (Mon Lex) where
   compare (Mon m)(Mon m') = on lex' A.toList m m'
@@ -187,9 +175,3 @@ revlex' = on lex' P.reverse
 ---------------------------------------------------------------------------------------
 instance Unital (Mon ord ) where
   one = undefined --Mon empty
--- λ> a = Mon empty
--- λ> getT a
--- Array D Seq (Sz1 0)
---   [  ]
-
--- λ>
