@@ -43,17 +43,16 @@ import GHC.Generics (Generic, Generic1)
 newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, Eq)
 --p[Term 1 $ m[1,2,3], Term 3 $ m[4,5,6], Term 0 $ m[]] :: Poly Rational Revlex
 --  Term 4 $ m[1,2,3,4] :: Term Rational Revlex
-
 --instance NFData (Poly t  ord) where
 --  rnf x = seq x ()
 
-p :: [Term t ord] -> Poly t ord
+p :: (NFData k ) => [Term k ord] -> Poly k ord
 p xs = Poly $ A.fromList Seq xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------
 --- The class is independent of the monomial order, in theory but in Revlex we take the last elemens in a monomial
-class' :: Poly t ord -> Int
+class' ::(NFData t ) => Poly t ord -> Int
 class' (Poly p) = A.maximum' $ A.map (f) p
   where
     g (Mon m) = m
@@ -70,21 +69,25 @@ max' (x:x':xs) =
      xs)
 --------------------------------------------------------------
 -- leading variable
-lv :: Poly t Revlex -> Int
+lv :: (NFData t ) => Poly t Revlex -> Int
 lv = class'
 --  LEX
 --lv :: Poly t Lex -> String
 --lv p =  "x_{" ++ show ( p)  ++ "}"
 --------------------------------------------------------------
 -- leading degreee
-ld :: Poly t Revlex -> Int
-ld p@(Poly xp) = max' .  P.map last' . toListP $ A.computeAs N predicate
+ld :: (NFData t ) => Poly t Revlex -> Int
+ld p@(Poly xp) =  A.maximum' . findingLast  $ A.computeAs N predicate
+  --max' .  P.map last' . toListP $ A.computeAs N predicate
   where
-    toListP = A.toList . A.map h
+    -- toListP = A.toList . A.map h
     g (Mon m) = m
     f (Term k mon) =  A.elemsCount (g mon)
-    h (Term k mon) = A.toList   (g mon)
+    -- h (Term k mon) = A.toList   (g mon)
     predicate = A.filterS (\x -> (f x) == class' p)  xp
+    k (Term k mon) = if elemsCount (g mon) /= 0 then  g mon ! ((elemsCount (g mon)) P.-1) else 0
+    findingLast = A.map (k)
+
 
 -- ld :: Poly t Revlex -> Int
 -- ld xp =
@@ -131,7 +134,7 @@ ld p@(Poly xp) = max' .  P.map last' . toListP $ A.computeAs N predicate
 --     (x,xs) = getT $ lt xp
 -- -- --------------------------------------------------------------
 -- -- -- Initial of a palynomial with respect to a variable
-initOfv :: (Eq t) => Poly t Revlex -> Poly t Revlex
+initOfv :: (NFData t, Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv p@(Poly xp) = Poly $ A.computeAs N (A.map takeInit (A.computeAs N predicate))
   where
     predicate =  A.filterS (\x -> f x == class' p && h x == ld p) xp
@@ -146,7 +149,7 @@ takeInit (Term k mod)
   where
     g (Mon m) = m
 
-initOfv' :: (Eq t) => Poly t Revlex -> Poly t Revlex
+initOfv' :: (NFData t, Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv' p@(Poly xp) = Poly $  (A.computeAs N predicate)
   where
     predicate =  A.filterS (\x -> f x == class' p && h x == ld p) xp
@@ -181,14 +184,14 @@ initOfv' p@(Poly xp) = Poly $  (A.computeAs N predicate)
 -- mdM = toList . getMon . snd .  getT
 -- --------------------------------------------------------------
 -- lcm para polynomios
-lcmP :: (Num t, Ord t)=> Poly t  Revlex -> Poly t  Revlex -> [Poly t  Revlex]
+lcmP :: (NFData t, Num t, Ord t)=> Poly t  Revlex -> Poly t  Revlex -> [Poly t  Revlex]
 lcmP a@(Poly poly) b@(Poly poly')
   | A.elemsCount poly == 1 && A.elemsCount poly' == 1 = (p $ on lcmT (head . A.toList) poly poly' : []) :[]
   | A.elemsCount poly' == 1 = withoutFactor a N.* (p $ lcmT (head . A.toList $ poly') (factor a) : []) :[]
   | A.elemsCount poly == 1 = withoutFactor b N.* (p $ lcmT (head . A.toList $ poly) (factor b) : []) :[]
   | otherwise = [p $ [on lcmT (head . A.toList) poly poly'],withoutFactor a, withoutFactor b]
 
-factor :: (Num t) => Poly t Revlex -> Term t Revlex
+factor :: (NFData t, Num t) => Poly t Revlex -> Term t Revlex
 factor (Poly poly) = Term 1 $ m commList
   where
     f (Term k mon) = g mon
@@ -196,7 +199,7 @@ factor (Poly poly) = Term 1 $ m commList
     commList = L.foldl1' (P.zipWith min)  (A.toList $ A.map f poly)
 
 
-withoutFactor ::(Num t) => Poly t Revlex -> Poly t  Revlex
+withoutFactor ::(NFData t, Num t) => Poly t Revlex -> Poly t  Revlex
 withoutFactor (Poly poly) = Poly $ A.computeAs N ( A.map f poly)
   where
     f m = quit m m'
@@ -232,14 +235,14 @@ lcm' (Mon m)(Mon m') = Term 1 $ Mon (A.computeAs P (A.zipWith max m m' ))
 --     (a,b) = getT m
 -- --------------------------------------------------------------
 -- -- spolynomial
-basicSpoly ::(Fractional t, Num t, Eq t, Ord t ) =>  Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+basicSpoly ::(NFData t, Fractional t, Num t, Eq t, Ord t ) =>  Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 basicSpoly f g = simP x'  (initOfv' f)  f N.- simP x' (initOfv' g)  g
   where
     x'  = on lcmP initOfv' f g
 
 --length (getP f) P.> 1 && length (getP g) P.> 1 = [ withoutFactor f, withoutFactor g,  Poly[lcmT (factor f) (factor g)] ]
 
-simP :: (Fractional t, Num t, Eq t ) => [Poly t Revlex]->Poly t Revlex->Poly t Revlex->Poly t Revlex
+simP :: (NFData t, Fractional t, Num t, Eq t ) => [Poly t Revlex]->Poly t Revlex->Poly t Revlex->Poly t Revlex
 simP f1 f2 f3 
   | length f1 == 3 = listElimination f1 f2 f3
   | (orden . head $ f1) == orden f2 = f3 --si
@@ -257,14 +260,14 @@ simP f1 f2 f3
 
 
 
-orden :: Poly t Revlex -> Poly t Revlex
+orden :: (NFData t)=> Poly t Revlex -> Poly t Revlex
 orden (Poly poly) = p $ P.map h ( sortBy (\( k, mon) ( k', mon') -> compare mon mon') (A.toList $ A.map f  poly ))
      where
        h (k, xs)=  Term k $ m xs
        g (Mon m) = m
        f (Term k mon) = (k,  A.toList (g mon))
 
-listElimination :: (Fractional t, Eq t, Num t) => [Poly t Revlex] -> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+listElimination :: (NFData t, Fractional t, Eq t, Num t) => [Poly t Revlex] -> Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 listElimination [a,b,c] f2 f3
   | orden b == orden e = f3 N.* p[ (head . A.toList $ f a) N./ d] N.* c
   | orden c == orden e = f3 N.* p[ (head . A.toList $ f a) N./ d]  N.* b
@@ -274,14 +277,14 @@ listElimination [a,b,c] f2 f3
     (d,e) = (factor f2, withoutFactor f2)
     f (Poly poly) = poly
 
-spoly :: (Fractional t, Ord t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+spoly :: (NFData t, Fractional t, Ord t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 spoly f g
   | f == zero = f
   | ld f >= ld g && class' g == class' f  = spoly (basicSpoly f g) g
   | otherwise = f
 ------------------------------------------------------------
 -- pseudo remainder
-prem :: (Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
+prem :: (NFData t, Eq t, Num t) => Poly t Revlex -> Poly t Revlex -> Poly t Revlex
 prem g f
   | g /= zero && class' g == class' f && ld g >= m = prem calc f
   | otherwise = g
@@ -289,10 +292,10 @@ prem g f
     m = ld f
     calc = (initOfv f N.* g) N.- (initOfv g N.* f N.* p [Term 1 $ mp[lv f][ld g P.- m] ])
 ------ <<INSTANCES >> ------------------------------------
-instance (Ord t, Num t, Show t) => Show (Poly t ord) where
+instance (NFData t, Ord t, Num t, Show t) => Show (Poly t ord) where
   show (Poly p) = showPoly p
 
-showPoly :: (Ord t, Num t, Show t) => Array N Ix1 (Term t ord)  -> String
+showPoly :: (NFData t, Ord t, Num t, Show t) => Array N Ix1 (Term t ord)  -> String
 showPoly terms =  (concat .  A.toList) $ A.map f terms
   where
     f (Term k mon)
@@ -301,7 +304,7 @@ showPoly terms =  (concat .  A.toList) $ A.map f terms
       | otherwise = error "term with empty coefficient k"
 
 -- ---------------------------------------------------------------
-instance (Num t, Eq t) => Additive (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => Additive (Poly t Revlex) where
   (+) (Poly poly)(Poly poly') =
     p $
     P.filter removeZero $
@@ -324,12 +327,12 @@ removeZero (Term k mon)
   | otherwise = False
 
 
-instance (Num t, Eq t) => Semiring (Poly t Revlex)
-instance (Num t, Eq t) => Abelian (Poly t Revlex)
-instance (Num t, Eq t) => Multiplicative (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => Semiring (Poly t Revlex)
+instance (NFData t, Num t, Eq t) => Abelian (Poly t Revlex)
+instance (NFData t, Num t, Eq t) => Multiplicative (Poly t Revlex) where
   (*) (Poly poly)(Poly poly') = simp $ p [ x N.* y | x <- A.toList poly, y <- A.toList poly' ]
 
-simp :: (Num t, Eq t) => Poly t Revlex -> Poly t Revlex
+simp :: (NFData t, Num t, Eq t) => Poly t Revlex -> Poly t Revlex
 simp (Poly poly) =
     p $
     P.filter removeZero $
@@ -350,7 +353,7 @@ simp (Poly poly) =
 -- -- λ>
 -- -- 22 marzo bryan
 
-instance (Num t, Eq t) => Group (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => Group (Poly t Revlex) where
   (-) (Poly poly)(Poly poly') =
     p $
     P.filter removeZero $
@@ -364,16 +367,16 @@ instance (Num t, Eq t) => Group (Poly t Revlex) where
        concatp = A.append' 1 poly  (A.map h poly')
 
 
-instance (Num t, Eq t) => LeftModule Integer (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => LeftModule Integer (Poly t Revlex) where
   (.*) = undefined
-instance (Num t, Eq t) => RightModule Integer (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => RightModule Integer (Poly t Revlex) where
   (*.) = undefined
-instance (Num t, Eq t) => LeftModule Natural (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => LeftModule Natural (Poly t Revlex) where
   (.*) = undefined
-instance (Num t, Eq t) => RightModule Natural (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => RightModule Natural (Poly t Revlex) where
   (*.) = undefined
 
-instance (Num t, Eq t) => Monoidal (Poly t Revlex) where
+instance (NFData t, Num t, Eq t) => Monoidal (Poly t Revlex) where
    zero = p[] --Poly (Array N Ix1 m[]) --zero --p[]
 
 

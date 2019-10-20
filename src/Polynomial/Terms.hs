@@ -1,5 +1,7 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Polynomial.Terms
   -- * Types
@@ -13,7 +15,7 @@ import Data.Function
 import Control.DeepSeq
 import Data.Massiv.Array as A
 import Data.Char.SScript
-
+import GHC.Generics (Generic)
 -- | Constraint synonym for rings that can be used as polynomial coefficient.
 
 -- data Term k ord =
@@ -21,10 +23,8 @@ import Data.Char.SScript
 --     { getT :: (k , Mon ord)
 --     } deriving (Eq)
 
-data Term k ord = Term !k !(Mon ord) deriving (Eq) -- Term 4 $ m[1,2,3,4] :: Term Rational Revlex
-instance NFData (Term k ord) where
-  rnf x = seq x ()
-
+data  Term k ord = Term !k !(Mon ord) deriving (Eq, Generic) -- Term 4 $ m[1,2,3,4] :: Term Rational Revlex
+instance (NFData k) => NFData (Term k ord)
 -- ----------------------<< FUNCTIONS >>--------------------
 -- ----------------------<< INSTANCES >>--------------------
 instance (Num k, Show k, Eq k) => Show (Term k ord) where
