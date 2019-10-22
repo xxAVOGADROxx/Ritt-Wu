@@ -24,7 +24,8 @@ import GHC.Generics (Generic)
 --     } deriving (Eq)
 
 data  Term k ord = Term !k !(Mon ord) deriving (Eq, Generic) -- Term 4 $ m[1,2,3,4] :: Term Rational Revlex
-instance (NFData k) => NFData (Term k ord)
+instance (NFData k) => NFData (Term k ord) where
+  rnf (Term k mon) = rnf k `deepseq` rnf mon `deepseq` ()
 -- ----------------------<< FUNCTIONS >>--------------------
 -- ----------------------<< INSTANCES >>--------------------
 instance (Num k, Show k, Eq k) => Show (Term k ord) where

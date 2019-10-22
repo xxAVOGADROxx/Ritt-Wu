@@ -46,6 +46,8 @@ newtype Mon ord = Mon (Array P Ix1 Int) deriving (Generic, NFData, Eq)
 data Lex = Lex
 -- | Reverse lexicographical order
 data Revlex = Revlex
+
+---multiDeg :: Mon m -> Mon m -> [Int]
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord

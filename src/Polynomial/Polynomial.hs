@@ -25,7 +25,8 @@ module Polynomial.Polynomial
     factor,
     simP,
     listElimination,
-    p
+    p,
+    orden
   ) where
 import Polynomial.Terms
 import Polynomial.Monomial
@@ -46,8 +47,8 @@ newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, 
 --instance NFData (Poly t  ord) where
 --  rnf x = seq x ()
 
-p :: (NFData k ) => [Term k ord] -> Poly k ord
-p xs = Poly $ A.fromList Seq xs
+p :: (NFData k ) => [Term k Revlex] -> Poly k Revlex
+p xs = Poly $ A.fromList Par xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------

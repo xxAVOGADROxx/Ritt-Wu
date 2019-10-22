@@ -3,12 +3,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 module Polynomial.Wu (
+PS(..),
 -- -- *Division
 -- psBsPS,
 -- psBsSP,
 -- --par
--- psBsUParP,
--- psBsUParS,
+psBsUParP,
+psBsUParS,
 -- --seq
 -- psBsSeqPS,
 -- psBsSeqSP,
@@ -30,7 +31,6 @@ charSetMPS,
 
 t,
 tp,
-pall,
 parps
 
 -- basicSet
@@ -52,10 +52,11 @@ import System.IO.Unsafe
 import Control.DeepSeq
 import GHC.Generics (Generic, Generic1)
 
-data  Idp t ord = Idp  !(Poly t ord) !Int deriving (Eq, Generic)
+data  Idp t ord = Idp !(Poly t ord) !Int deriving (Eq, Generic)
 newtype PS t ord = PS (Array N Ix1 (Idp t ord )) deriving (Eq,Generic, NFData)
 
-instance (NFData t) =>  NFData (Idp t ord) 
+instance (NFData t) =>  NFData (Idp t ord) where 
+  rnf (Idp t ord) = rnf t `deepseq` rnf ord `deepseq` ()
 
 -- polynomial id
 idp :: Poly t ord  -> Idp t ord
@@ -86,27 +87,7 @@ p5 =  p [t 3 [1], t 6 [2] ] :: Poly Rational Revlex
 p6 =  p [t 3 [1,2,3], t 6 [2] ] :: Poly Rational Revlex
 example = parps [p1,p2,p3,p4,p5,p6]
 
-lr0   =
-        p
-          [ tp 1  [2] [2]
-          , tp 1  [3] [2]
-          , tp 1  [4] [2]
-          , t (-1)  [2]
-          ] :: Poly Rational Revlex
-lr1   =
-        p [tp 1  [2, 3] [1, 1]
-          , tp 1  [4] [2]
-          , t (-1) []
-          ] :: Poly Rational Revlex
-lr2   =
-        p
-          [ tp 1  [2, 3, 4] [1, 1, 1]
-          , tp (-1)  [2] [2]
-          , tp (-1)  [3] [2]
-          , tp (-1)  [4] [1]
-          , t 1 []
-          ] :: Poly Rational Revlex
-example2 = parps [lr0, lr1,lr2] 
+
 ----------------------------------------------------------------------------------------------------
 instance (NFData t, Ord t, Num t, Show t) => Show (PS t ord) where
   show xs = concat $ showPoly xs
@@ -210,7 +191,8 @@ reducedP (x:xs) z
 -- give two polyomials a b check if a is reduced to b
 isReduced :: (NFData t, Eq t, Num t) => Idp t Revlex -> Idp t Revlex -> Bool
 isReduced (Idp poly id) (Idp poly' id')
-  | degP poly (class' poly') P.< degP poly' (class' poly') = True
+ -- | degP poly (class' poly') P.< degP poly' (class' poly') = True
+  | prem poly poly' == poly = True
   | otherwise = False
 -- -----------------------------------------------------------------
 -- compare the degree of two polynomials in a given variable
@@ -231,7 +213,7 @@ lDPolys xs = head $ groupBy (on (==) i) (sortBy (on compare i) f)
     i (Idp poly id) = id
 
 -----------------------------------------------------------------------------
-quitEmptyPoly :: (NFData t, Eq t) =>  PS t ord -> PS t ord
+quitEmptyPoly :: (NFData t, Eq t) =>  PS t Revlex -> PS t Revlex
 quitEmptyPoly (PS pol)= PS $ A.computeAs N $ ( A.filterS (\x -> x /= f) pol)
   where
     f = idp $ p[]
@@ -297,7 +279,7 @@ charSetMPS ps
   | bs == ps = ps
   | rs == ps' = bs
   | rs /= parps[] = charSetMPS (clean (PS $ A.computeAs N $ on (A.append' 1) f rs bs))
-  | otherwise = bs
+  | otherwise = error "Testing"--bs
   where
     rs = clean $ bsDividePsMPS ps' bs
     bs = clean $ basicSet ps
@@ -305,6 +287,12 @@ charSetMPS ps
     f(PS poly) = poly;
     clean (PS poly) = PS $ A.computeAs N (A.map g poly);
     g (Idp poly id)= Idp poly 0
+
+-- orden' :: PS t ord -> PS t ord
+-- orden' (PS polys) = A.map (f)  polys
+--   where
+--     f (Idp poly id) = g poly ()
+
 -- f(PS poly) = poly; clean (PS poly) = PS $ A.computeAs N (A.map g poly); g (Idp poly id)= Idp poly 0
 
 bsDividePsMPS ::(NFData t,  Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t Revlex
@@ -455,13 +443,7 @@ psBsUParS (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sspoly  x bs) ps
 -- -- f1 = Poly[Term(1,mp[2][2]), Term(-1, m[1,1]), Term(-1, m[0])] :: Poly Rational Revlex; f2 = Poly[Term(1,m[2]), Term(-2,mp[3][1])] :: Poly Rational Revlex; f3 = Poly[Term(1,mp[3][2]), Term(-1,m[1,1]), Term(1,m[0])] :: Poly Rational Revlex
 -- -- c1 = [Poly[Term(1,m[6])], Poly[Term(4,m[3])], Poly[Term(6,m[5])], Poly[Term(10,m[3])]] :: [Poly Rational Revlex]; c2 = [Poly[Term(1, mp[1,2][2,1]), Term(2, m[3])], Poly[Term(5,mp[2][5])], Poly[Term(3,mp[1,2][1,1])]] :: [Poly Rational Revlex]; c3 = [Poly[Term(3, mp[3][2]), Term(4, mp[1][2])], Poly[Term(3, mp[3][1])]] :: [Poly Rational Revlex]; ps = concat $ c1:c2:c3:[]
 
---f1 = Poly [Term (1, mp [2] [2]), Term (-1, m [1, 1]), Term (-1, m [])] :: Poly Rational Revlex
-f1 = p [tp 1 [2][2], t (-1) [1,1], t (-1) []] :: Poly Rational Revlex
---f2 = Poly [Term (1, m [2]), Term (-2, mp [3] [1])] :: Poly Rational Revlex
-f2 = p[t 1 [2], tp (-2) [3][1]] :: Poly Rational Revlex
---f3 = Poly [Term (1, mp [3] [2]), Term (-1, m [1, 1]), Term (1, m [])] :: Poly Rational Revlex
-f3 = p [tp 1 [3][2], t (-1) [1,1], t 1 []] :: Poly Rational Revlex
-pall = parps [f1,f2,f3]
+
 
 -- -----------------------------------------------------------------------------------------
 -- -- s1 =
