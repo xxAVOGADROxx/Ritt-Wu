@@ -279,7 +279,7 @@ charSetMPS ps
   | bs == ps = ps
   | rs == ps' = bs
   | rs /= parps[] = charSetMPS (clean (PS $ A.computeAs N $ on (A.append' 1) f rs bs))
-  | otherwise = error "Testing"--bs
+  | otherwise = bs
   where
     rs = clean $ bsDividePsMPS ps' bs
     bs = clean $ basicSet ps
