@@ -4,8 +4,13 @@ import Prelude as P
 import Polynomial.Monomial
 import Polynomial.Wu
 import Polynomial.Polynomial
+
+a33 = p[tp 1 [2][4], tp 1 [1,2,3][1,2,1], t 1 [2], t (-2)[1,1], tp 1 [2][1], tp 1 [3][2] ] :: Poly Rational Revlex
+a34 = p[tp 1 [1,2][1,4], tp 1 [2,3][1,4], t (-2) [2,1], t (-3) []]:: Poly Rational Revlex
+a35 = p[t (-1) [3,2], t 1 [1,1,3],  tp 1 [2][4], t 1 [1,2,1], t (-2)[1,1]]:: Poly Rational Revlex
+ps9 = parps [a33,a34,a35]
 --import Polynomial.Terms
-main :: IO (PS Rational Revlex)
+main :: IO ()
 main
       --Example 1 book calculator
  = do
@@ -133,77 +138,124 @@ main
       a50 = p[tp 1 [1,2,3,4,5][1,1,1,1,1], tp 1 [1,2,3,4,6][1,1,1,1,1], tp 1 [1,2,3,5,6][1,1,1,1,1], tp 1 [1,2,4,5,6][1,1,1,1,1], tp 1 [1,3,4,5,6][1,1,1,1,1], tp 1 [2,3,4,5,6][1,1,1,1,1]] :: Poly Rational Revlex
       a51 = p[t 1 [1,1,1,1,1,1], t (-1) [] ] :: Poly Rational Revlex
       ps13 = parps [a46,a47,a48,a49,a50,a51]
-  --defaultMain
-   -- [bgroup
-   --    "Polynomial Division"
-   --  --      bench "whnf" $ whnf (psByTf ps) ps1
-   --    [ bgroup
-   --        "prem"
-   --        [ bench "PS-nf" $ nf (psBsUParP ps2) ps1
-   --        -- ,bench "S-nf" $ nf (psBsS ps) ps1
-   --        ]
-   --    , bgroup
-   --        "spoly"
-    --      bench "whnf" $ whnf (psByTfLRIO ps) ps
-    --      [ bench "SP-nf" $ nf (psBsUParS ps2) ps1
-          --, bench "S-nf" $ nf (psBsSParS ps) ps1
-    --      ]
-  --    , bgroup
-  --         "Sequential pre"
-  --         [ bench "Seq PS-nf" $ nf (psBsSeqPS ps) ps1
-  --          --, bench "S-nf" $ nf (psBsSSeqS ps) ps1
-  --         ]
-  --     , bgroup
-  --         "Sequential spoly"
-  --         [ bench "Seq SP-nf" $ nf (psBsSeqSP ps) ps1
-  --    -- ,bench "P-nf" $ nf (ps)
-  --         ]
-  --     , bgroup
-  --         "Parallel prem"
-  --   --      bench "whnf" $ whnf (psByTfLRt ps) ps1
-  --         [bench "Par PS-nf" $ nf (psBsUParP ps) ps1]
-  --     , bgroup
-  --       "Parallel spoly"
-  --         [bench "Par SP-nf" $ nf (psBsUParS)
-  --         ]
-  -- ]
-  --    ]
+  defaultMain
    -- ********************************************
-   -- [ bgroup
-   --    "Computing CharSet"
-   --      [
-   --        bgroup
-   --          "CharSetPS"
-   --          [--bench "whnf" $ whnf (charSetNormalPS) ps2,
-   --           --bench "nf" $ nf (charSetNormalPS) ps2
-   --          ]
-   --      , bgroup
-   --          "CharSetSP"
-   --          [--bench "whnf" $ whnf (charSetNormalSP) ps2,
-   --           --bench "nf" $ nf (charSetNormalSP) ps2
-   --          ]
-   --       , bgroup
-   --          "CharSetMSeqPS"
-   --          [--bench "whnf" $ whnf (charSetMSeqPS) ps2,
-   --           --bench "nf" $ nf (charSetMSeqPS) ps2
-   --          ]
-   --      , bgroup
-   --          "CharSetMSeqSP"
-   --          [--bench "whnf" $ whnf (charSetMSeqSP) ps2,
-   --           --bench "nf" $ nf (charSetMSeqSP) ps2
-   --          ]
-   --      , bgroup
-   --          "CharSetMSP"
-   --          [--bench "whnf" $ whnf (charSetMSP) pall,
-   --            bench "nf" $ nf (charSetMSP) pall
-   --          ]
-   --      , bgroup
-   --          "CharSetMPS"
-   --          [--bench "whnf" $ whnf (charSetMPS) pall,
-   --           --bench "nf" $ nf (charSetMPS) ps2
-   --          ]
-   --      ]
-   --  ]
+   [ bgroup
+      "Computing CharSet"
+        [
+          bgroup
+            "SP2"
+            [bench "nf" $ nf (charSetMSP) ps2,
+              bench "whnf" $ whnf (charSetMSP) ps2
+            ]
+        , bgroup
+            "PS2"
+            [bench "nf" $ nf (charSetMPS) ps2,
+              bench "whnf" $ whnf (charSetMPS) ps2
+            ]
+         , bgroup
+            "SP3"
+            [bench "nf" $ nf (charSetMSP) ps3,
+              bench "whnf" $ whnf (charSetMSP) ps3
+            ]
+        , bgroup
+            "PS3"
+            [bench "nf" $ nf (charSetMPS) ps3,
+              bench "whnf" $ whnf (charSetMPS) ps3
+            ]
+        , bgroup
+            "SP4"
+            [bench "nf" $ nf (charSetMSP) ps4,
+              bench "whnf" $ whnf (charSetMSP) ps4
+            ]
+        , bgroup
+            "PS4"
+            [bench "nf" $ nf (charSetMPS) ps4,
+             bench "whnf" $ nf (charSetMPS) ps4
+            ]
+        , bgroup
+            "SP5"
+            [bench "nf" $ nf (charSetMSP) ps5,
+             bench "whnf" $ nf (charSetMSP) ps5
+            ]
+         , bgroup
+            "PS5"
+            [bench "nf" $ nf (charSetMPS) ps5,
+             bench "whnf" $ nf (charSetMPS) ps5
+            ]
+         , bgroup
+            "SP6"
+            [bench "nf" $ nf (charSetMSP) ps6,
+             bench "whnf" $ nf (charSetMSP) ps6
+            ]
+         , bgroup
+            "PS6"
+            [bench "nf" $ nf (charSetMPS) ps6,
+             bench "whnf" $ nf (charSetMPS) ps6
+            ]
+         , bgroup
+            "SP7"
+            [bench "nf" $ nf (charSetMSP) ps7,
+             bench "whnf" $ nf (charSetMSP) ps7
+            ]
+         , bgroup
+            "PS7"
+            [bench "nf" $ nf (charSetMPS) ps7,
+             bench "whnf" $ nf (charSetMPS) ps7
+            ]
+         , bgroup
+            "SP8"
+            [bench "nf" $ nf (charSetMSP) ps8,
+             bench "whnf" $ nf (charSetMSP) ps8
+            ]
+         , bgroup
+            "PS8"
+            [bench "nf" $ nf (charSetMPS) ps8,
+             bench "whnf" $ nf (charSetMPS) ps8
+            ]
+         , bgroup
+            "SP9"
+            [--bench "nf" $ nf (charSetMSP) ps9,
+             --bench "whnf" $ nf (charSetMSP) ps9
+            ]
+         , bgroup
+            "PS9"
+            [--bench "nf" $ nf (charSetMPS) ps9,
+             --bench "whnf" $ nf (charSetMPS) ps9
+            ]
+         , bgroup
+            "SP10"
+            [--bench "nf" $ nf (charSetMSP) ps10,
+             --bench "whnf" $ nf (charSetMSP) ps10
+            ]
+         , bgroup
+            "PS10"
+            [--bench "nf" $ nf (charSetMPS) ps10,
+             --bench "whnf" $ nf (charSetMPS) ps10
+            ]
+         , bgroup
+            "SP11"
+            [bench "nf" $ nf (charSetMSP) ps11,
+             bench "whnf" $ nf (charSetMSP) ps11
+            ]
+         , bgroup
+            "PS11"
+            [bench "nf" $ nf (charSetMPS) ps11,
+             bench "whnf" $ nf (charSetMPS) ps11
+            ]
+         --  bgroup
+         --    "SP9"
+         --    [--bench "nf" $ nf (charSetMSP) ps9,
+         --     --bench "whnf" $ nf (charSetMPS) ps9
+         --    ]
+         -- , bgroup
+         --    "PS13"
+         --    [bench "nf" $ nf (charSetMPS) ps13,
+         --     bench "nf" $ nf (charSetMPS) ps13
+         --    ]
+
+        ]
+    ]
 -- ./Ritt-Wu-benchmark +RTS -N -l
 -- threadscope Ritt-Wu-benchmark.eventlog
 
@@ -218,4 +270,4 @@ main
   --return $ charSetMPS ps7
   --return $ charSetMSP ps8 --- parallel
   --return $ charSetMPS ps9 -- parallel
-  return $ charSetMPS ps13
+  --return $ charSetMPS ps1

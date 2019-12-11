@@ -62,9 +62,10 @@ instance (NFData t) =>  NFData (Idp t ord) where
 idp :: Poly t ord  -> Idp t ord
 idp xs = Idp xs 0
 
+
 -- polynomials id to parallel polynomial set
 ps :: (NFData t) => [Idp t ord] -> PS t ord
-ps xs = PS $ A.fromList Par xs
+ps xs = PS $ A.fromList Seq xs
 
 --wrapper to write terms
 t :: k -> [Int] -> Term k ord
@@ -163,7 +164,7 @@ red (PS poly)(PS poly') = ps $ on (P.foldl (flip delete)) f poly' poly
 -- -- a function that search a poly with lower rank and reduced x_i
 -- search Poly Lower Rank and Reduced
 groupClass ::(NFData t, Num t, Eq t)=> PS t ord -> [[Idp t ord]]
-groupClass (PS poly) = (groupBy (on (==) f) $ A.toList poly)
+groupClass (PS poly) = groupBy (on (==) f) $ A.toList poly
   where
     f (Idp pol id) = id
 
@@ -469,7 +470,7 @@ pall2 = parps  [f6,f7]
 -- a2 = Poly [Term(1,mp[2][7]), Term(-1,mp[3][7])] :: Poly Rational Revlex
 -- a3 = Poly [Term(1,mp[3][7]), Term(-1,mp[4][7])] :: Poly Rational Revlex
 -- a4 = Poly [Term(1,mp[4][7]), Term(-1, mp[5][7])] :: Poly Rational Revlex
--- a5 = Poly [Term(1,m[6,1]), Term(1, mp[2,3][6,1]),Term(1, mp[3,4][6,1]), Term(1, mp[4,5][6,1]), Term(1, mp[1,5][1,6]) ] :: Poly Rational Revlex
+-- -- a5 = Poly [Term(1,m[6,1]), Term(1, mp[2,3][6,1]),Term(1, mp[3,4][6,1]), Term(1, mp[4,5][6,1]), Term(1, mp[1,5][1,6]) ] :: Poly Rational Revlex
 -- ps2= a1 : a2: a3: a4: a5: []
 
 -- ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
@@ -482,3 +483,58 @@ pall2 = parps  [f6,f7]
 -- --t3 = Poly [Term(1,mp[1,2][4,2])]::Poly Rational Revlex
 -- t4 = Poly [Term(1,mp[3][2])]::Poly Rational Revlex
 -- pt = [t1,t2,t3,t4]
+a9 =
+  p
+    [ tp 1 [1, 10] [2, 1]
+    , tp 2 [1, 2, 11] [1, 1, 1]
+    , tp 3 [2, 12] [2, 1]
+    , tp 1 [1, 4] [1, 1]
+    , tp 2 [2, 5] [1, 1]
+    , tp 1 [7] [1]
+    ] :: Poly Rational Revlex
+a10 =
+  p
+    [ tp 3 [1, 9] [2, 1]
+    , tp 2 [1, 2, 10] [1, 1, 1]
+    , tp 1 [2, 11] [2, 1]
+    , tp 2 [1, 3] [1, 1]
+    , tp 1 [2, 4] [1, 1]
+    , tp 1 [6] [1]
+    ] :: Poly Rational Revlex
+a11 =
+  p
+    [ tp 1 [1, 9] [3, 1]
+    , tp 1 [1, 2, 10] [2, 1, 1]
+    , tp 1 [1, 2, 11] [1, 2, 1]
+    , tp 1 [2, 12] [3, 1]
+    , tp 1 [1, 3] [2, 1]
+    , tp 1 [1, 2, 4] [1, 1, 1]
+    , tp 1 [2, 5] [2, 1]
+    , tp 1 [1, 6] [1, 1]
+    , tp 1 [2, 7] [1, 1]
+    , tp 1 [8] [1]
+    ] :: Poly Rational Revlex
+ps3' = a9 : a10 : a11 : []
+ps3 = parps ps3'
+
+
+a12 = p [ tp 1 [1,2,3][2,4,1], tp 1 [1,2][2,4], tp 2 [1,2,3][2,2,1], tp 6 [1,2][2,2], tp (-4) [1,2][1,3], tp 1 [2,3][4,1], tp (-1) [2][4], tp 1 [1,3][2,1], tp 1 [1][2], tp 4 [1,2][1,1], tp 2 [2,3][2,1], tp (-6) [2][2], tp 1 [3][1], t (-1) []
+        ] :: Poly Rational Revlex
+a13 = p [ tp 1 [1,2,3][8,3,1], tp 1 [1,2,3][8,1,1], tp 4 [1,2,3][6,3,1], tp (-8) [1,2][6,3], tp 8 [1,2][5,4], tp 4 [1,2,3][6,1,1], tp 8 [1,2][6,1], tp (-48) [1,2][5,2], tp 6 [1,2,3][4,3,1], tp 48 [1,2][4,3], tp (-8) [1,2][3,4], tp 8 [1][5], tp 6 [1,2,3][4,1,1], tp (-48) [1,2][4,1], tp (48) [1,2][3,2], tp 4 [1,2,3][2,3,1], tp (-8) [1,2][2,3], tp (-8) [1][3], tp 4 [1,2,3][2,1,1], tp (8) [1,2][2,1], tp (1) [2,3][3,1], tp 1 [2,3][1,1]
+         ] :: Poly Rational Revlex
+ps4 = parps [a12,a13]
+
+a6 =
+  p [tp 1 [2] [2], tp 1 [3] [2], tp 1 [4] [2], t (-1) [2]] :: Poly Rational Revlex
+a7 =
+  p [tp 1 [2, 3] [1, 1], tp 1 [4] [2], t (-1) []] :: Poly Rational Revlex
+a8 =
+  p
+    [ tp 1 [2, 3, 4] [1, 1, 1]
+    , tp (-1) [2] [2]
+    , tp (-1) [3] [2]
+    , tp (-1) [4] [1]
+    , t 1 []
+    ] :: Poly Rational Revlex
+ps2' = a6 : a7 : a8 : []
+ps2 = parps ps2'

@@ -10,8 +10,8 @@ module Polynomial.Polynomial
     class',
     ld,
     prem,
-    -- lc,
-    -- lt,
+    varDegree,
+    lt,
     -- lm,
     lv,
     initOfv,
@@ -48,7 +48,7 @@ newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, 
 --  rnf x = seq x ()
 
 p :: (NFData k ) => [Term k Revlex] -> Poly k Revlex
-p xs = Poly $ A.fromList Par xs
+p xs = Poly $ A.fromList Seq xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------
@@ -87,7 +87,7 @@ ld p@(Poly xp) =  A.maximum' . findingLast  $ A.computeAs N predicate
     -- h (Term k mon) = A.toList   (g mon)
     predicate = A.filterS (\x -> (f x) == class' p)  xp
     k (Term k mon) = if elemsCount (g mon) /= 0 then  g mon ! ((elemsCount (g mon)) P.-1) else 0
-    findingLast = A.map (k)
+    findingLast = A.map k
 
 
 -- ld :: Poly t Revlex -> Int
@@ -114,11 +114,24 @@ ld p@(Poly xp) =  A.maximum' . findingLast  $ A.computeAs N predicate
 -- --mdP :: Poly t ord -> [Int]
 -- --mdP = undefined
 -- --------------------------------------------------------------
--- leading term
--- lt :: (Eq t) => Poly t Revlex -> Term t Revlex
--- lt xp = lmMax' [ x | x <- getP xp, ld xp == f x ]
---   where
---     f = last' . A.toList . getMon . snd . getT
+--leading term
+lt :: (NFData t, Eq t) => Poly t Revlex -> Term t Revlex
+lt poly@(Poly terms)= h . i . computeAs N $  fil terms
+  where
+    fil = A.filterS (\x -> f x == ld poly)
+    g (Mon m) = m
+    f (Term k mon) = if elemsCount (g mon) /= 0 then  g mon ! (elemsCount (g mon) P.-1) else 0
+    i = A.quicksort
+    h = head . A.toList
+
+varDegree :: (NFData t, Eq t) => Poly t Revlex -> Int -> Int 
+varDegree (Poly terms ) n = maxel . A.map takeEl . computeAs N $ fil terms
+  where
+    fil = A.filterS (\x -> f x >= n)
+    g (Mon m) = m
+    f (Term k mon) = if elemsCount (g mon) /= 0 then  elemsCount (g mon) else 0
+    maxel = maximum'
+    takeEl (Term k mon) = g mon ! (n P.- 1) 
 
 -- lmMax' :: (Eq t )=>[Term t Revlex] -> Term t Revlex
 -- lmMax' [x] = x
@@ -190,7 +203,7 @@ lcmP a@(Poly poly) b@(Poly poly')
   | A.elemsCount poly == 1 && A.elemsCount poly' == 1 = (p $ on lcmT (head . A.toList) poly poly' : []) :[]
   | A.elemsCount poly' == 1 = withoutFactor a N.* (p $ lcmT (head . A.toList $ poly') (factor a) : []) :[]
   | A.elemsCount poly == 1 = withoutFactor b N.* (p $ lcmT (head . A.toList $ poly) (factor b) : []) :[]
-  | otherwise = [p $ [on lcmT (head . A.toList) poly poly'],withoutFactor a, withoutFactor b]
+  | otherwise = [p $ [on lcmT factor a b],withoutFactor a, withoutFactor b]
 
 factor :: (NFData t, Num t) => Poly t Revlex -> Term t Revlex
 factor (Poly poly) = Term 1 $ m commList
