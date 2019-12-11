@@ -48,7 +48,7 @@ newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, 
 --  rnf x = seq x ()
 
 p :: (NFData k ) => [Term k Revlex] -> Poly k Revlex
-p xs = Poly $ A.fromList Seq xs
+p xs = Poly $ A.fromList Par xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------

@@ -51,9 +51,9 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [] = Mon $ A.fromList Seq [] 
-m [0] = Mon $ A.fromList Seq [] --error "A empty term should be represented as m[]"
-m xs = Mon $ A.fromList Seq xs 
+m [] = Mon $ A.fromList Par [] 
+m [0] = Mon $ A.fromList Par [] --error "A empty term should be represented as m[]"
+m xs = Mon $ A.fromList Par xs 
 
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position

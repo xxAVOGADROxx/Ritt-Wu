@@ -65,7 +65,7 @@ idp xs = Idp xs 0
 
 -- polynomials id to parallel polynomial set
 ps :: (NFData t) => [Idp t ord] -> PS t ord
-ps xs = PS $ A.fromList Seq xs
+ps xs = PS $ A.fromList Par xs
 
 --wrapper to write terms
 t :: k -> [Int] -> Term k ord
