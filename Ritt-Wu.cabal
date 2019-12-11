@@ -94,7 +94,7 @@ benchmark Ritt-Wu-benchmark
  main-is:             Benchmarking.hs
  other-modules:
       Paths_Ritt_Wu
- ghc-options:  -threaded -O2 -rtsopts -with-rtsopts=-N -eventlog
+ ghc-options:  -threaded -O2 -rtsopts -with-rtsopts=-N 
  build-depends:
                          Ritt-Wu
                , algebra
