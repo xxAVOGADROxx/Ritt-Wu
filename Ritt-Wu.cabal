@@ -74,7 +74,7 @@ test-suite Ritt-Wu-test
       Paths_Ritt_Wu
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts  -fprof-auto "-with-rtsopts=-N -p -s -h -i0.1"
+  ghc-options: -threaded -rtsopts  -fprof-auto
   build-depends:
                           Ritt-Wu
                 , base >=4.7 && <5
