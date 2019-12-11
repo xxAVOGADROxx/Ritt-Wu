@@ -22,12 +22,12 @@ a8 = Poly [Term(1,mp[2,3,4][1,1,1]), Term(-1,mp[2][2]), Term(-1,mp[3][2]), Term(
 ps2 = a6 : a7: a8 : []
 
 
-main :: [Poly Rational Revlex]
-main = do
+main :: IO()
+main = putStrLn "Para usar los benchmar usar cabal new-bench"
   --charSetPfS ps1
   --charSetPfS pall
   --charSetPfPr pallR
-  charSetNormalPS ps2
+  --charSetNormalPS ps2
  
 
 
