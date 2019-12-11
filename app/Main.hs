@@ -16,10 +16,10 @@ import Polynomial.Terms
 -- a7 = Poly [Term(1,m[2]), Term(1, m[1,1]), Term(2,mp[2][2]), Term(-16,m[0])] :: Poly Rational Revlex
 -- ps2 = a6 : a7 :[]
 
-a6 = Poly [ Term(1,mp[2][1]), Term(1,mp[3][2]), Term(1,mp[4][2]), Term(-1,m[2]) ] :: Poly Rational Revlex
-a7 = Poly [Term(1,mp[2,3][1,1]), Term(1,mp[4][2]), Term(-1,m[])] :: Poly Rational Revlex
-a8 = Poly [Term(1,mp[2,3,4][1,1,1]), Term(-1,mp[2][2]), Term(-1,mp[3][2]), Term(-1,mp[4][1]), Term(1,m[])] :: Poly Rational Revlex
-ps2 = a6 : a7: a8 : []
+--a6 = Poly [ Term(1,mp[2][1]), Term(1,mp[3][2]), Term(1,mp[4][2]), Term(-1,m[2]) ] :: Poly Rational Revlex
+--a7 = Poly [Term(1,mp[2,3][1,1]), Term(1,mp[4][2]), Term(-1,m[])] :: Poly Rational Revlex
+--a8 = Poly [Term(1,mp[2,3,4][1,1,1]), Term(-1,mp[2][2]), Term(-1,mp[3][2]), Term(-1,mp[4][1]), Term(1,m[])] :: Poly Rational Revlex
+--ps2 = a6 : a7: a8 : []
 
 
 main :: IO()
