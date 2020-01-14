@@ -46,7 +46,6 @@ import Control.Monad
 import Numeric.Algebra as N
 import Prelude as P
 import Control.Concurrent
-import Control.DeepSeq
 import Foreign.Marshal.Unsafe
 import System.IO.Unsafe
 import Control.DeepSeq
@@ -65,7 +64,7 @@ idp xs = Idp xs 0
 
 -- polynomials id to parallel polynomial set
 ps :: (NFData t) => [Idp t ord] -> PS t ord
-ps xs = PS $ A.fromList Par xs
+ps xs = PS $ A.fromList (ParN 2) xs
 
 --wrapper to write terms
 t :: k -> [Int] -> Term k ord
@@ -300,7 +299,7 @@ bsDividePsMPS ::(NFData t,  Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t 
 bsDividePsMPS ps' bs = quitEmptyPoly (psBsUParP ps' bs)
 -- ----------------------------------------------------------------------------------------------------
 psBsUParP :: (NFData t, Num t, Eq t) => PS t Revlex  -> PS t Revlex -> PS t Revlex
-psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sprem  x bs) ps
+psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (`sprem` bs) ps
 -- --psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN 4) (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] )
 -- psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently Par (pure $!) [sprem  x bs | x <- ps] )
 -- --psBsUParP ps bs =  unsafePerformIO ( traverseConcurrently (ParN $ fromIntegral (length ps)) (\p -> myThreadId >>= print >> pure p) [sprem  x bs | x <- ps] )
@@ -327,7 +326,7 @@ bsDividePsMSP ::(NFData t, Fractional t, Ord t, Num t, Eq t) => PS t Revlex  -> 
 bsDividePsMSP ps' bs = quitEmptyPoly (psBsUParS ps' bs)
 
 psBsUParS :: (NFData t, Fractional t, Num t, Eq t, Ord t) =>PS t Revlex  -> PS t Revlex -> PS t Revlex
-psBsUParS (PS ps) (bs) = PS $ A.computeAs N $ A.map (\ x-> sspoly  x bs) ps
+psBsUParS (PS ps) (bs) = PS $ A.computeAs N $ A.map (`sspoly` bs) ps
 
 ----- *****************************-----------------------
 -- -- charSet sequetial computation
@@ -483,6 +482,27 @@ pall2 = parps  [f6,f7]
 -- --t3 = Poly [Term(1,mp[1,2][4,2])]::Poly Rational Revlex
 -- t4 = Poly [Term(1,mp[3][2])]::Poly Rational Revlex
 -- pt = [t1,t2,t3,t4]
+-- ********************************************************************************************************************************************************************************************************
+f1 = p [tp 1 [2] [2], t (-1) [1, 1], t (-1) []] :: Poly Rational Revlex
+f2 = p [t 1 [2], tp (-2) [3] [1]] :: Poly Rational Revlex
+f3 = p [tp 1 [3] [2], t (-1) [1, 1], t 1 []] :: Poly Rational Revlex
+ps1 = parps [f2,f1, f3]
+----------------------------------------------------------------------------------------------------
+a6 =
+  p [tp 1 [2] [2], tp 1 [3] [2], tp 1 [4] [2], t (-1) [2]] :: Poly Rational Revlex
+a7 =
+  p [tp 1 [2, 3] [1, 1], tp 1 [4] [2], t (-1) []] :: Poly Rational Revlex
+a8 =
+  p
+    [ tp 1 [2, 3, 4] [1, 1, 1]
+    , tp (-1) [2] [2]
+    , tp (-1) [3] [2]
+    , tp (-1) [4] [1]
+    , t 1 []
+    ] :: Poly Rational Revlex
+ps2' = a6 : a7 : a8 : []
+ps2 = parps ps2'
+----------------------------------------------------------------------------------------------------
 a9 =
   p
     [ tp 1 [1, 10] [2, 1]
@@ -516,25 +536,104 @@ a11 =
     ] :: Poly Rational Revlex
 ps3' = a9 : a10 : a11 : []
 ps3 = parps ps3'
-
-
+----------------------------------------------------------------------------------------------------
 a12 = p [ tp 1 [1,2,3][2,4,1], tp 1 [1,2][2,4], tp 2 [1,2,3][2,2,1], tp 6 [1,2][2,2], tp (-4) [1,2][1,3], tp 1 [2,3][4,1], tp (-1) [2][4], tp 1 [1,3][2,1], tp 1 [1][2], tp 4 [1,2][1,1], tp 2 [2,3][2,1], tp (-6) [2][2], tp 1 [3][1], t (-1) []
         ] :: Poly Rational Revlex
 a13 = p [ tp 1 [1,2,3][8,3,1], tp 1 [1,2,3][8,1,1], tp 4 [1,2,3][6,3,1], tp (-8) [1,2][6,3], tp 8 [1,2][5,4], tp 4 [1,2,3][6,1,1], tp 8 [1,2][6,1], tp (-48) [1,2][5,2], tp 6 [1,2,3][4,3,1], tp 48 [1,2][4,3], tp (-8) [1,2][3,4], tp 8 [1][5], tp 6 [1,2,3][4,1,1], tp (-48) [1,2][4,1], tp (48) [1,2][3,2], tp 4 [1,2,3][2,3,1], tp (-8) [1,2][2,3], tp (-8) [1][3], tp 4 [1,2,3][2,1,1], tp (8) [1,2][2,1], tp (1) [2,3][3,1], tp 1 [2,3][1,1]
          ] :: Poly Rational Revlex
 ps4 = parps [a12,a13]
+----------------------------------------------------------------------------------------------------
+a14 = p[ tp 35 [2][1], tp 40 [3][1], tp 25 [4][1], tp (-27) [5][1]] :: Poly Rational Revlex
+a15 = p[ tp 45 [2][1], tp 35 [5][1], tp (-165) [6][1], t (-36) []] :: Poly Rational Revlex
+a16 = p[ tp (-11)[5,6][1,1], tp (3)[6][2],tp (99) [1][1]  ] :: Poly Rational Revlex
+a17 = p[ tp 25 [2,5][1,1], tp (-165)[6][2], tp (15) [1][1], tp 30 [3][1], tp (-18) [4][1] ] :: Poly Rational Revlex
+a18 = p[ tp 15 [2,4][1,1], tp 20 [3,5][1,1], tp (-9) [1][1]] :: Poly Rational Revlex
+a19 = p[ tp (-11)[6][3], tp 1 [1,2][1,1], tp 2 [3,4][1,1] ]  :: Poly Rational Revlex
+ps5 = parps [a14,a15,a16,a17,a18,a19]
+----------------------------------------------------------------------------------------------------
+a20 = p[t  (-4) [1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1]] :: Poly Rational Revlex
+a21 = p[tp (-4) [1][2], tp 1 [2][2], tp 1 [3][2], tp 1 [4][2], tp 4 [1][1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1], t (-3) []] :: Poly Rational Revlex
+a22 = p[tp (5) [1][3], tp 4 [3,4][2,1], tp 3 [2][2], tp 2 [1,4][1,1], tp 4 [1][1], tp 1 [2][1], tp 1 [3][1], tp 2 [4][1], t (-1) []] :: Poly Rational Revlex
+a23 = p[tp 5 [3][4], tp 1 [4][3], tp 16 [1][2], tp 3 [2][2], tp (-4) [4][1], t (-1) []] :: Poly Rational Revlex
+ps6 = parps [a20,a21,a22,a23]
+----------------------------------------------------------------------------------------------------
+a24 = p[tp 1 [1][1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1], tp 1 [5][1]] :: Poly Rational Revlex
+a25 = p[tp 1 [1,2][1,1], tp 1 [2,3][1,1], tp 1 [3,4][1,1], tp 1 [1,5][1,1], tp 1 [4,5][1,1]] :: Poly Rational Revlex
+a26 = p[tp 1 [1,2,3][1,1,1], tp 1 [2,3,4][1,1,1], tp 1 [1,2,5][1,1,1], tp 1 [1,4,5][1,1,1], tp 1 [3,4,5][1,1,1]] :: Poly Rational Revlex
+a27 = p[tp 1 [1,2,3,4][1,1,1,1], tp 1 [1,2,3,5][1,1,1,1], tp 1 [1,2,4,5][1,1,1,1], tp 1 [1,3,4,5][1,1,1,1], tp 1 [2,3,4,5][1,1,1,1]] :: Poly Rational Revlex
+a28 = p[t 1 [1,1,1,1,1], t (-1) []] :: Poly Rational Revlex
+ps7 = parps [a24,a25,a26, a27, a28]
+----------------------------------------------------------------------------------------------------
+a29 = p[tp (-2) [1,3][1,1], tp (-2) [3][2], tp (-2)[1][1], tp (8) [3][1], t (-2) []]:: Poly Rational Revlex
+a30 = p[tp (-3)[1,2,3][1,1,1], tp (2) [1,3,4][1,1,1], tp (4)[3,4][2,1], tp (3)[2,3][1,1], tp 1 [1,4][1,1], tp (-7) [3,4][1,1]]:: Poly Rational Revlex
+a31 = p[tp 1 [1,2][2,2], tp (-2)[1,2,4][2,1,1], t (-2) [1,1,1,1], tp 1 [1,4][2,2], tp 2 [1,3,4][1,1,2], tp 1 [3,4][2,2], tp (-2)[1,2][1,2], t (4) [1,1,1], tp 2 [1,2,4][1,1,1], tp 2 [2,3,4][1,1,1], tp (-4)[1,4][1,2], tp (-4) [3,4][1,2], tp 1 [2][2], tp 2 [1,3][1,1], tp 10 [3][2], tp (-4)[2,4][1,1], tp 4 [4][2], tp (-2)[1][1], tp (-8)[3][1], t 2 [] ]:: Poly Rational Revlex
+a32 = p[t 3 [2,2], t 12 [1,1,1,1], tp (-3) [1,4][2,2], tp 6 [1,3,4][1,1,2], tp (-3) [3,4][2,2], tp (-6) [1,2][1,2], tp 12 [1,2,4][1,1,1], tp 12 [2,3,4][1,1,1], tp (-4) [1][2], tp 3 [2][2], tp 5 [3][2], tp (-12) [2,4][1,1], tp 12 [4][2], tp (-6) [3][1], t 5 [] ] :: Poly Rational Revlex
+ps8 = parps [a29,a30,a31,a32]
+----------------------------------------------------------------------------------------------------
+-- ojito
 
-a6 =
-  p [tp 1 [2] [2], tp 1 [3] [2], tp 1 [4] [2], t (-1) [2]] :: Poly Rational Revlex
-a7 =
-  p [tp 1 [2, 3] [1, 1], tp 1 [4] [2], t (-1) []] :: Poly Rational Revlex
-a8 =
-  p
-    [ tp 1 [2, 3, 4] [1, 1, 1]
-    , tp (-1) [2] [2]
-    , tp (-1) [3] [2]
-    , tp (-1) [4] [1]
-    , t 1 []
-    ] :: Poly Rational Revlex
-ps2' = a6 : a7 : a8 : []
-ps2 = parps ps2'
+----------------------------------------------------------------------------------------------------
+a39 = p[tp 1 [2,3][1,5], t 1 [1], t (-2)[] ]:: Poly Rational Revlex
+a40 = p[tp 1 [1,3][5,1], tp 1 [2][1], t (-2)[]]:: Poly Rational Revlex
+a41 = p[t 1 [1,5], tp 1 [3][1], t (-2) []]:: Poly Rational Revlex
+ps11 = parps [a39,a40,a41]
+----------------------------------------------------------------------------------------------------
+a46 = p[tp 1 [1][1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1], tp 1 [5][1], tp 1 [6][1]] :: Poly Rational Revlex
+a47 = p[tp 1 [1,2][1,1], tp 1 [2,3][1,1], tp 1 [3,4][1,1], tp 1 [4,5][1,1], tp 1 [1,6][1,1], tp 1 [5,6][1,1]] :: Poly Rational Revlex
+a48 = p[tp 1 [1,2,3][1,1,1], tp 1 [2,3,4][1,1,1], tp 1[3,4,5][1,1,1], tp 1 [1,2,6][1,1,1], tp 1 [1,5,6][1,1,1], tp 1 [4,5,6][1,1,1]] :: Poly Rational Revlex
+a49 = p[tp 1 [1,2,3,4][1,1,1,1], tp 1 [2,3,4,5][1,1,1,1], tp 1 [1,2,3,6][1,1,1,1], tp 1 [1,2,5,6][1,1,1,1], tp 1 [1,4,5,6][1,1,1,1], tp 1 [3,4,5,6][1,1,1,1]] :: Poly Rational Revlex
+a50 = p[tp 1 [1,2,3,4,5][1,1,1,1,1], tp 1 [1,2,3,4,6][1,1,1,1,1], tp 1 [1,2,3,5,6][1,1,1,1,1], tp 1 [1,2,4,5,6][1,1,1,1,1], tp 1 [1,3,4,5,6][1,1,1,1,1], tp 1 [2,3,4,5,6][1,1,1,1,1]] :: Poly Rational Revlex
+a51 = p[t 1 [1,1,1,1,1,1], t (-1) [] ] :: Poly Rational Revlex
+ps13 = parps [a46,a47,a48,a49,a50,a51]
+----------------------------------------------------------------------------------------------------
+a52 = p [t 1 [1,1],tp 1 [2,3][1,1], tp 1 [3,4][1,1], tp 1 [1,5][1,1], tp 1 [4,5][1,1]] :: Poly Rational Revlex
+a53 = p [tp 1 [1][1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1], tp 1 [5][1]] :: Poly Rational Revlex
+a54 = p [tp 1 [1,2,3][1,1,1], tp 1 [2,3,4][1,1,1], tp 1 [1,2,5][1,1,1], tp 1 [1,4,5][1,1,1], tp 1 [3,4,5][1,1,1]] :: Poly Rational Revlex
+a55 = p [t 1 [1,1,1,1], tp 1 [1,2,4,5][1,1,1,1], tp 1 [1,3,4,5][1,1,1,1], tp 1 [2,3,4,5][1,1,1,1], tp 1 [2,3,4][1,1,1] ] :: Poly Rational Revlex
+a56 = p [ t 1 [1,1,1,1,1], t (-1) []] :: Poly Rational Revlex
+ps14 = parps [a52, a53,a54,a55,a56]
+----------------------------------------------------------------------------------------------------
+a57 = p [tp 1 [1,2,3][2,1,1], tp 1 [1,2,3][1,2,1], tp 1 [1,2,3][1,1,2], tp 1 [1,1,1][1,1,1], tp 1 [1,2][1,1], tp 1 [1,3][1,1], tp 1 [2,3][1,1]] :: Poly Rational Revlex
+a58 = p [tp 1 [1,2,3][2,2,1], tp 1 [1,2,3][1,2,2], tp 1 [1,2,3][2,1,1], t 1 [1,1,1], tp 1 [2,3][1,1], t 1 [1], tp 1 [3][1] ] :: Poly Rational Revlex
+a59 = p [t 1 [2,2,2], t 1 [2,2,1], t 1 [1,2,1], t 1 [1,1,1], tp 1 [1,3][1,1], tp 1 [3][1], t 1 []] :: Poly Rational Revlex
+ps15 = parps [a57, a58, a59]
+----------------------------------------------------------------------------------------------------
+
+
+-- class' XE take max
+-- totalDeg XE
+-- number of poly
+
+--ld XE
+
+-- numTerms
+
+helper :: (NFData t) => PS t Revlex -> [Poly t Revlex]
+helper (PS b) = L.map f  (A.toList b )
+  where
+    f (Idp poly x) = poly
+
+cls ::(NFData t, Eq t, Num t) => PS t Revlex -> [Int]
+cls p = L.map class' $ helper ( p)
+
+td :: (NFData t, Eq t, Num t) =>PS t Revlex -> [Int]
+td p = L.map totalDeg $ helper ( p)
+
+np :: (NFData t, Eq t, Num t) =>PS t Revlex -> Int
+np p = length $ helper (charSetMPS p)
+np' :: (NFData t, Eq t, Num t, Fractional t, Ord t) =>PS t Revlex -> Int
+np' p = length $ helper (charSetMSP p)
+---------------------------------------------------------
+lde :: (NFData t, Eq t, Num t) =>PS t Revlex -> [Int]
+lde p = L.map (\x-> varDegree x 5) $ helper (charSetMPS p)
+lde' :: (NFData t, Eq t, Num t, Fractional t, Ord t) =>PS t Revlex -> [Int]
+lde' p = L.map (\x-> varDegree x 3) $ helper (charSetMSP p)
+
+nt :: (NFData t, Eq t, Num t) =>  PS t Revlex -> [Int]
+nt p = L.map numTerms $ helper (charSetMPS p)
+
+nt' :: (NFData t, Eq t, Num t, Fractional t, Ord t) =>  PS t Revlex -> [Int]
+nt' p = L.map numTerms $ helper (charSetMSP p)
+
+
+-- cls (mas alto), td, np; class' cambiar el valor; nt

@@ -26,7 +26,10 @@ module Polynomial.Polynomial
     simP,
     listElimination,
     p,
-    orden
+    orden,
+    tsum,
+    totalDeg,
+    numTerms
   ) where
 import Polynomial.Terms
 import Polynomial.Monomial
@@ -48,7 +51,7 @@ newtype Poly t ord = Poly (Array N Ix1 (Term t ord)) deriving (Generic, NFData, 
 --  rnf x = seq x ()
 
 p :: (NFData k ) => [Term k Revlex] -> Poly k Revlex
-p xs = Poly $ A.fromList Par xs
+p xs = Poly $ A.fromList (ParN 2) xs
 
 
 ---------------------------------------------------- << FUNCTIONS >>-----------------------------------------
@@ -357,15 +360,6 @@ simp (Poly poly) =
        g (Mon m) = m
        f (Term k mon) = (k,  A.toList (g mon))
 ---------------------------------------------------------------------------
--- -- instance Division (Mon ord) where
--- --   (/) xs xz =
-
--- -- λ> c = Poly [Term(3,m[1,2]), Term(5,m[2,3])] :: Poly Int Lex
--- -- λ> d = Poly [Term(2,m[2,1]), Term(2,m[3,5])] :: Poly Int Lex
--- -- λ> c N.* d
--- -- +6x₁³x₂³+6x₁⁴x₂⁷+10x₁⁴x₂⁴+10x₁⁵x₂⁸
--- -- λ>
--- -- 22 marzo bryan
 
 instance (NFData t, Num t, Eq t) => Group (Poly t Revlex) where
   (-) (Poly poly)(Poly poly') =
@@ -398,79 +392,14 @@ last' ::  [Int] -> Int
 last' [] = 0
 last' xs = last xs
 
--- --------------------------FACTOR-----------------
--- -- prime_factors :: Int -> [Int]
 
--- -- prime_factors 1 = []
--- -- prime_factors n
--- --   | factors == []  = [n]
--- --   | otherwise = factors ++ prime_factors (n `div` (head factors))
--- --   where factors = take 1 $ filter (\x -> (n `mod` x) == 0) [2 .. n P.- 1]
+-- find the term with the maximum of the sum of all powers
+totalDeg :: (NFData t) => Poly t Revlex -> Int
+totalDeg (Poly p) = A.maximum' $ A.map (f) p
+  where
+    g (Mon m) = m
+    f (Term k mon) = A.sum (g mon)
+-- Contador de terminos en un polinomio
+numTerms :: (NFData t) => Poly t Revlex -> Int
+numTerms (Poly p) = A.elemsCount p
 
--- -- mcd' :: [Int] -> [[Int]]
--- -- mcd' ps = P.map (prime_factors) ps
-
--- -- mcd :: [Int] -> Int
--- -- mcd ps =  P.foldl1 (P.*) $ P.foldl1 mezc' (mcd' ps)
-
--- -- mezc' :: [Int] -> [Int] -> [Int]
--- -- mezc' [] _ = []
--- -- mezc' _ [] =  []
--- -- mezc' (x:xs)(y:ys)
--- --   | x P.< y       = mezc' xs (y:ys)
--- --   | x P.> y       = mezc'(x:xs) ys
--- --   | x == y      = [x] ++ mezc' xs ys
--- ------------------------------------------------
-
--- --------------------------FACTOR-----------------
--- -- a =  Poly [Term(1,m[1,2]), Term(2,m[3,4]), Term(4,m[1,2])] :: Poly Int Lex
--- -- sortBy (\ (Term (_,b)) (Term(_,d)) -> compare b d) $ getP a
-
--- -- poly = sum of terms
--- -- temr = coeff * monomio
--- -- monomio = set of univariantes
--- -- lm = highest value in the monomial
--- -- f = Poly [Term (1,m[1,2]), Term(1, m[0])] :: Poly Int Revlex
--- -- g = Poly [Term (2,mp[2][3]), Term(-1, mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
-
--- --  Poly [Term(4,m[1,2]), Term(-3,m[5,6]), Term(6,mp[4][9])] :: Poly Int Lex
--- -- Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[3,4,5][1,2,3]), Term(34, mp[3,4,5][2,2,3])] :: Poly Int Lex
--- -- a = Poly [Term(4,m[1,2]), Term(-3,m[5,10]), Term(6,mp[4][9]), Term(15, mp[1,3][3,9]), Term(30, mp[2,3,4,5][4,1,2,3]), Term(34, mp[2,3,4,5][8,2,2,3])] :: Poly Int Lex
--- -- c = Poly [Term(2,m[2,1]), Term(1, m[1,2])] :: Poly Int Revlex
--- -- f = Poly [Term(1,m[2,3]), Term(-1,m[0,1])] :: Poly Int Lex
--- -- g = Poly [Term(1,m[3,1]), Term(-2,m[])] :: Poly Int Lex
-
--- -- a = Poly [Term(1,m[2,1]), Term(1,m[1,2])] :: Poly Int Revlex
--- -- b = Poly [Term(1,m[3]), Term(2,m[2,1]), Term(1,mp[3][1]), Term(3,m[1,2])] :: Poly Int Revlex
--- -- c = Poly [Term(2,m[2,1]), Term(1, m[1,2])] :: Poly Int Revlex
--- --Ideals
--- -- >>>
--- -- f = Poly [Term(1,m[2,3]), Term(-1, mp[2][1])] :: Poly Int Revlex
--- -- g = Poly [Term(1,m[3,1]), Term(-2,m[0])]  :: Poly Int Revlex
--- -- q = Poly [Term(1,m[8,2]), Term(2,m[5,1]), Term(4,m[2]), Term(-1, m[6])] :: Poly Int Revlex
--- -- r = Poly [Term(8,m[2]),Term(-2,m[6])] :: Poly Int Revlex
--- -- a = Poly [expM (Term(1,m[3]) :: Term Int Revlex) 3]
--- -- example spoly (int) Ans: (-15) % 2 + 10 % 1x₁¹(-5) % 2x₁²
--- -- f1 = Poly [Term(2,mp[2][2]),Term(-4,mp[2][1]), Term(1,m[2]), Term(-4,m[1]), Term(3,m[0])] :: Poly Rational Revlex
--- -- f2 = Poly [Term(1,mp[2][2]), Term(-2,mp[2][1]),Term(3,m[2]),Term(-12,m[1]), Term(9,m[0])] :: Poly Rational Revlex
--- -- example Cox 350 Ans:
--- --p1 = Poly [Term (1,m[2,3]), Term(-1,mp[2][1])] :: Poly Rational Revlex
--- --p2 = Poly [Term (1,m[3,1]), Term(-2,m[0])] :: Poly Rational Revlex
--- -- repect to y
-f1 = p [Term 1 $ m[2,3] , Term (- 1) $ mp[2][1] ] :: Poly Rational Revlex
-f2 = p [Term 1 $ m[3,1] , Term (- 2) $ m[0] ] :: Poly Rational Revlex
--- prem 8x^2 -2x^6
--- poly f1 f2 = 4 -1x⁴
--- -- poly to taste the initial term
--- -- f1 = Poly [Term(4,m[2,1]),Term(-1,m[6,1])] :: Poly Int Revlex
--- -- buchberger example 19
--- -- f1 = Poly [Term(1,m[1,2]), Term(1,m[0])] :: Poly Int Revlex
--- -- f2 = Poly [Term(2,mp[2][3]), Term(-1,mp[2][2]), Term(1,m[2,1])] :: Poly Int Revlex
--- -- dividendo primero divisor despues
--- -- BUCH
--- -- p1 = Poly [Term(1,mp[1,4][1,1]), Term(1,mp[3][1]), Term(1,m[1,1])] :: Poly Rational Revlex
--- -- p2 = Poly [Term(2,mp[4][2]), Term(-2,mp[3,4][1,1]), Term(5,mp[1,2,4][1,1,1]), Term(-5,m[1,1,1])] :: Poly Rational Revlex
--- -- p3 = Poly [Term(1,m[1,3]), Term(-2,m[2,2]), Term(1,mp[2][1])] :: Poly Rational Revlex
--- -- p4 = Poly [Term(3,mp[2][4]), Term(-1,m[1])] :: Poly Rational Revlex
--- ps = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]
--- ps1 = [Poly[Term(1,m[2])]] :: [Poly Rational Revlex]

@@ -35,7 +35,6 @@ import GHC.Generics (Generic, Generic1)
 
 -- | A wrapper for monomials with a certain (monomial) order
 newtype Mon ord = Mon (Array P Ix1 Int) deriving (Generic, NFData, Eq)
-
 --instance NFData (Mon ord) where
 --  rnf x = seq x ()
 
@@ -51,9 +50,9 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [] = Mon $ A.fromList Seq [] 
-m [0] = Mon $ A.fromList Seq [] --error "A empty term should be represented as m[]"
-m xs = Mon $ A.fromList Seq xs 
+m [] = Mon $ A.fromList (ParN 1) [] 
+m [0] = Mon $ A.fromList (ParN 1) [] --error "A empty term should be represented as m[]"
+m xs = Mon $ A.fromList (ParN 1) xs 
 
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position

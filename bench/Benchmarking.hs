@@ -4,6 +4,7 @@ import Prelude as P
 import Polynomial.Monomial
 import Polynomial.Wu
 import Polynomial.Polynomial
+import Data.Massiv.Array as A
 
 a33 = p[tp 1 [2][4], tp 1 [1,2,3][1,2,1], t 1 [2], t (-2)[1,1], tp 1 [2][1], tp 1 [3][2] ] :: Poly Rational Revlex
 a34 = p[tp 1 [1,2][1,4], tp 1 [2,3][1,4], t (-2) [2,1], t (-3) []]:: Poly Rational Revlex
@@ -138,121 +139,173 @@ main
       a50 = p[tp 1 [1,2,3,4,5][1,1,1,1,1], tp 1 [1,2,3,4,6][1,1,1,1,1], tp 1 [1,2,3,5,6][1,1,1,1,1], tp 1 [1,2,4,5,6][1,1,1,1,1], tp 1 [1,3,4,5,6][1,1,1,1,1], tp 1 [2,3,4,5,6][1,1,1,1,1]] :: Poly Rational Revlex
       a51 = p[t 1 [1,1,1,1,1,1], t (-1) [] ] :: Poly Rational Revlex
       ps13 = parps [a46,a47,a48,a49,a50,a51]
+--http://symbolicdata.org/XMLResources/IntPS/Cyclic_5_1.xml
+      a52 = p [t 1 [1,1],tp 1 [2,3][1,1], tp 1 [3,4][1,1], tp 1 [1,5][1,1], tp 1 [4,5][1,1]] :: Poly Rational Revlex
+      a53 = p [tp 1 [1][1], tp 1 [2][1], tp 1 [3][1], tp 1 [4][1], tp 1 [5][1]] :: Poly Rational Revlex
+      a54 = p [tp 1 [1,2,3][1,1,1], tp 1 [2,3,4][1,1,1], tp 1 [1,2,5][1,1,1], tp 1 [1,4,5][1,1,1], tp 1 [3,4,5][1,1,1]] :: Poly Rational Revlex
+      a55 = p [t 1 [1,1,1,1], tp 1 [1,2,4,5][1,1,1,1], tp 1 [1,3,4,5][1,1,1,1], tp 1 [2,3,4,5][1,1,1,1], tp 1 [2,3,4][1,1,1] ] :: Poly Rational Revlex
+      a56 = p [ t 1 [1,1,1,1,1], t (-1) []] :: Poly Rational Revlex
+      ps14 = parps [a52, a53,a54,a55,a56]
+--http://symbolicdata.org/XMLResources/IntPS/Cyclic_7_1.xml
+      a57 = p [tp 1 [1,2,3][2,1,1], tp 1 [1,2,3][1,2,1], tp 1 [1,2,3][1,1,2], tp 1 [1,1,1][1,1,1], tp 1 [1,2][1,1], tp 1 [1,3][1,1], tp 1 [2,3][1,1]] :: Poly Rational Revlex
+      a58 = p [tp 1 [1,2,3][2,2,1], tp 1 [1,2,3][1,2,2], tp 1 [1,2,3][2,1,1], t 1 [1,1,1], tp 1 [2,3][1,1], t 1 [1], tp 1 [3][1] ] :: Poly Rational Revlex
+      a59 = p [t 1 [2,2,2], t 1 [2,2,1], t 1 [1,2,1], t 1 [1,1,1], tp 1 [1,3][1,1], tp 1 [3][1], t 1 []] :: Poly Rational Revlex
+      ps15 = parps [a57, a58, a59]
+-- http://symbolicdata.org/XMLResources/IntPS/Czapor-86a.xml
+      a60 = p [] :: Poly Rational Revlex
+      a61 = p [] :: Poly Rational Revlex
+      a62 = p [] :: Poly Rational Revlex
+      ps16 = parps [a60, a61, a62]
   defaultMain
    -- ********************************************
    [ bgroup
       "Computing CharSet"
         [
+        --   bgroup
+        --     "SP1"
+        --   [
+        --  bench "nf" $ nf (charSetMSP) ps1
+        --  --bench "whnf" $ whnf (charSetMSP) ps1
+        -- ]
+--        ,
+            -- bgroup
+            -- "PS1"
+            -- [bench "nf" $ nf (charSetMPS) ps1
+            --   --bench "nf" $ nf (A.sum) (fromLists' Par [[0,0,0,0,0],[0,1,2,3,4],[0,2,4,6,8]] :: Array U Ix2 Double)
+            --   --bench "whnf" $ whnf (charSetMPS) ps1
+            -- ]
+        -- ,
+          -- bgroup
+          --   "SP2"
+          --   [bench "nf" $ nf (charSetMSP) ps2
+          --     --bench "whnf" $ whnf (charSetMSP) ps2
+          --   ]
+        -- ,
+          -- bgroup
+          --   "PS2"
+          --   [bench "nf" $ nf (charSetMPS) ps2
+          --    -- bench "whnf" $ whnf (charSetMPS) ps2
+          --   ]
+        --  ,
+          -- bgroup
+          --   "SP3"
+          --   [bench "nf" $ nf (charSetMSP) ps3
+          --     --bench "whnf" $ whnf (charSetMSP) ps3
+          --   ]
+        -- ,
+          -- bgroup
+          --   "PS3"
+          --   [bench "nf" $ nf (charSetMPS) ps3
+          --     --bench "whnf" $ whnf (charSetMPS) ps3
+          --   ]
+        -- ,
+          -- bgroup
+          --   "SP4"
+          --   [bench "nf" $ nf (charSetMSP) ps4
+          --     --bench "whnf" $ whnf (charSetMSP) ps4
+          --   ]
+        -- ,
+          -- bgroup
+          --   "PS4"
+          --   [bench "nf" $ nf (charSetMPS) ps4
+          --    --bench "whnf" $ nf (charSetMPS) ps4
+          --   ]
+        -- ,
+          -- bgroup
+          --   "SP5"
+          --   [bench "nf" $ nf (charSetMSP) ps5
+          --    --bench "whnf" $ nf (charSetMSP) ps5
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS5"
+          --   [bench "nf" $ nf (charSetMPS) ps5
+          --    --bench "whnf" $ nf (charSetMPS) ps5
+          --   ]
+        --  ,
+          -- bgroup
+          --   "SP6"
+          --   [bench "nf" $ nf (charSetMSP) ps6
+          --    --bench "whnf" $ nf (charSetMSP) ps6
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS6"
+          --   [bench "nf" $ nf (charSetMPS) ps6
+          --    --bench "whnf" $ nf (charSetMPS) ps6
+          --   ]
+        --  ,
+          -- bgroup
+          --   "SP7"
+          --   [bench "nf" $ nf (charSetMSP) ps7
+          --    --bench "whnf" $ nf (charSetMSP) ps7
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS7"
+          --   [bench "nf" $ nf (charSetMPS) ps7
+          --    --bench "whnf" $ nf (charSetMPS) ps7
+          --   ]
+        --  ,
+          -- bgroup
+          --   "SP8"
+          --   [bench "nf" $ nf (charSetMSP) ps8
+          --    --bench "whnf" $ nf (charSetMSP) ps8
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS8"
+          --   [bench "nf" $ nf (charSetMPS) ps8
+          --    --bench "whnf" $ nf (charSetMPS) ps8
+          --   ]
+         --,
+          -- bgroup
+          --   "SP9"
+          --   [bench "nf" $ nf (charSetMSP) ps11
+          --    --bench "whnf" $ nf (charSetMSP) ps11
+          --  ]
+        --  ,
+          -- bgroup
+          --   "PS9"
+          --   [bench "nf" $ nf (charSetMPS) ps11
+          --    --bench "whnf" $ nf (charSetMPS) ps11
+          --   ]
+        --  ,
+          -- bgroup
+          --   "SP10"
+          --   [bench "nf" $ nf (charSetMSP) ps13
+          --    --bench "whnf" $ nf (charSetMPS) ps13
+          --   ]
+        --  ,
           bgroup
-            "SP2"
-            [bench "nf" $ nf (charSetMSP) ps2,
-              bench "whnf" $ whnf (charSetMSP) ps2
-            ]
-        , bgroup
-            "PS2"
-            [bench "nf" $ nf (charSetMPS) ps2,
-              bench "whnf" $ whnf (charSetMPS) ps2
-            ]
-         , bgroup
-            "SP3"
-            [bench "nf" $ nf (charSetMSP) ps3,
-              bench "whnf" $ whnf (charSetMSP) ps3
-            ]
-        , bgroup
-            "PS3"
-            [bench "nf" $ nf (charSetMPS) ps3,
-              bench "whnf" $ whnf (charSetMPS) ps3
-            ]
-        , bgroup
-            "SP4"
-            [bench "nf" $ nf (charSetMSP) ps4,
-              bench "whnf" $ whnf (charSetMSP) ps4
-            ]
-        , bgroup
-            "PS4"
-            [bench "nf" $ nf (charSetMPS) ps4,
-             bench "whnf" $ nf (charSetMPS) ps4
-            ]
-        , bgroup
-            "SP5"
-            [bench "nf" $ nf (charSetMSP) ps5,
-             bench "whnf" $ nf (charSetMSP) ps5
-            ]
-         , bgroup
-            "PS5"
-            [bench "nf" $ nf (charSetMPS) ps5,
-             bench "whnf" $ nf (charSetMPS) ps5
-            ]
-         , bgroup
-            "SP6"
-            [bench "nf" $ nf (charSetMSP) ps6,
-             bench "whnf" $ nf (charSetMSP) ps6
-            ]
-         , bgroup
-            "PS6"
-            [bench "nf" $ nf (charSetMPS) ps6,
-             bench "whnf" $ nf (charSetMPS) ps6
-            ]
-         , bgroup
-            "SP7"
-            [bench "nf" $ nf (charSetMSP) ps7,
-             bench "whnf" $ nf (charSetMSP) ps7
-            ]
-         , bgroup
-            "PS7"
-            [bench "nf" $ nf (charSetMPS) ps7,
-             bench "whnf" $ nf (charSetMPS) ps7
-            ]
-         , bgroup
-            "SP8"
-            [bench "nf" $ nf (charSetMSP) ps8,
-             bench "whnf" $ nf (charSetMSP) ps8
-            ]
-         , bgroup
-            "PS8"
-            [bench "nf" $ nf (charSetMPS) ps8,
-             bench "whnf" $ nf (charSetMPS) ps8
-            ]
-         , bgroup
-            "SP9"
-            [--bench "nf" $ nf (charSetMSP) ps9,
-             --bench "whnf" $ nf (charSetMSP) ps9
-            ]
-         , bgroup
-            "PS9"
-            [--bench "nf" $ nf (charSetMPS) ps9,
-             --bench "whnf" $ nf (charSetMPS) ps9
-            ]
-         , bgroup
-            "SP10"
-            [--bench "nf" $ nf (charSetMSP) ps10,
-             --bench "whnf" $ nf (charSetMSP) ps10
-            ]
-         , bgroup
             "PS10"
-            [--bench "nf" $ nf (charSetMPS) ps10,
-             --bench "whnf" $ nf (charSetMPS) ps10
+            [bench "nf" $ nf (charSetMPS) ps13
+             --bench "nf" $ nf (charSetMPS) ps13
             ]
-         , bgroup
-            "SP11"
-            [bench "nf" $ nf (charSetMSP) ps11,
-             bench "whnf" $ nf (charSetMSP) ps11
-            ]
-         , bgroup
-            "PS11"
-            [bench "nf" $ nf (charSetMPS) ps11,
-             bench "whnf" $ nf (charSetMPS) ps11
-            ]
-         --  bgroup
-         --    "SP9"
-         --    [--bench "nf" $ nf (charSetMSP) ps9,
-         --     --bench "whnf" $ nf (charSetMPS) ps9
-         --    ]
-         -- , bgroup
-         --    "PS13"
-         --    [bench "nf" $ nf (charSetMPS) ps13,
-         --     bench "nf" $ nf (charSetMPS) ps13
-         --    ]
+        --  ,
+          -- bgroup
+          --   "SP11"
+          --   [bench "nf" $ nf (charSetMSP) ps14
+          --    --bench "whnf" $ nf (charSetMPS) ps14
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS11"
+          --   [bench "nf" $ nf (charSetMPS) ps14
+          --    --bench "nf" $ nf (charSetMPS) ps14
+          --   ]
+        -- ,
+          -- bgroup
+          --   "SP12"
+          --   [bench "nf" $ nf (charSetMSP) ps15
+          --    --bench "whnf" $ nf (charSetMPS) ps15
+          --   ]
+        --  ,
+          -- bgroup
+          --   "PS12"
+          --   [bench "nf" $ nf (charSetMPS) ps15
+          --    --bench "nf" $ nf (charSetMPS) ps15
+          --   ]
 
         ]
     ]
