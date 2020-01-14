@@ -161,151 +161,151 @@ main
    [ bgroup
       "Computing CharSet"
         [
-        --   bgroup
-        --     "SP1"
-        --   [
-        --  bench "nf" $ nf (charSetMSP) ps1
-        --  --bench "whnf" $ whnf (charSetMSP) ps1
-        -- ]
---        ,
-            -- bgroup
-            -- "PS1"
-            -- [bench "nf" $ nf (charSetMPS) ps1
-            --   --bench "nf" $ nf (A.sum) (fromLists' Par [[0,0,0,0,0],[0,1,2,3,4],[0,2,4,6,8]] :: Array U Ix2 Double)
-            --   --bench "whnf" $ whnf (charSetMPS) ps1
-            -- ]
-        -- ,
-          -- bgroup
-          --   "SP2"
-          --   [bench "nf" $ nf (charSetMSP) ps2
-          --     --bench "whnf" $ whnf (charSetMSP) ps2
-          --   ]
-        -- ,
-          -- bgroup
-          --   "PS2"
-          --   [bench "nf" $ nf (charSetMPS) ps2
-          --    -- bench "whnf" $ whnf (charSetMPS) ps2
-          --   ]
-        --  ,
-          -- bgroup
-          --   "SP3"
-          --   [bench "nf" $ nf (charSetMSP) ps3
-          --     --bench "whnf" $ whnf (charSetMSP) ps3
-          --   ]
-        -- ,
-          -- bgroup
-          --   "PS3"
-          --   [bench "nf" $ nf (charSetMPS) ps3
-          --     --bench "whnf" $ whnf (charSetMPS) ps3
-          --   ]
-        -- ,
-          -- bgroup
-          --   "SP4"
-          --   [bench "nf" $ nf (charSetMSP) ps4
-          --     --bench "whnf" $ whnf (charSetMSP) ps4
-          --   ]
-        -- ,
-          -- bgroup
-          --   "PS4"
-          --   [bench "nf" $ nf (charSetMPS) ps4
-          --    --bench "whnf" $ nf (charSetMPS) ps4
-          --   ]
-        -- ,
-          -- bgroup
-          --   "SP5"
-          --   [bench "nf" $ nf (charSetMSP) ps5
-          --    --bench "whnf" $ nf (charSetMSP) ps5
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS5"
-          --   [bench "nf" $ nf (charSetMPS) ps5
-          --    --bench "whnf" $ nf (charSetMPS) ps5
-          --   ]
-        --  ,
-          -- bgroup
-          --   "SP6"
-          --   [bench "nf" $ nf (charSetMSP) ps6
-          --    --bench "whnf" $ nf (charSetMSP) ps6
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS6"
-          --   [bench "nf" $ nf (charSetMPS) ps6
-          --    --bench "whnf" $ nf (charSetMPS) ps6
-          --   ]
-        --  ,
-          -- bgroup
-          --   "SP7"
-          --   [bench "nf" $ nf (charSetMSP) ps7
-          --    --bench "whnf" $ nf (charSetMSP) ps7
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS7"
-          --   [bench "nf" $ nf (charSetMPS) ps7
-          --    --bench "whnf" $ nf (charSetMPS) ps7
-          --   ]
-        --  ,
-          -- bgroup
-          --   "SP8"
-          --   [bench "nf" $ nf (charSetMSP) ps8
-          --    --bench "whnf" $ nf (charSetMSP) ps8
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS8"
-          --   [bench "nf" $ nf (charSetMPS) ps8
-          --    --bench "whnf" $ nf (charSetMPS) ps8
-          --   ]
-         --,
-          -- bgroup
-          --   "SP9"
-          --   [bench "nf" $ nf (charSetMSP) ps11
-          --    --bench "whnf" $ nf (charSetMSP) ps11
-          --  ]
-        --  ,
-          -- bgroup
-          --   "PS9"
-          --   [bench "nf" $ nf (charSetMPS) ps11
-          --    --bench "whnf" $ nf (charSetMPS) ps11
-          --   ]
-        --  ,
-          -- bgroup
-          --   "SP10"
-          --   [bench "nf" $ nf (charSetMSP) ps13
-          --    --bench "whnf" $ nf (charSetMPS) ps13
-          --   ]
-        --  ,
+          bgroup
+            "SP1"
+          [
+         bench "nf" $ nf (charSetMSP) ps1
+         --bench "whnf" $ whnf (charSetMSP) ps1
+        ]
+       ,
+            bgroup
+            "PS1"
+            [bench "nf" $ nf (charSetMPS) ps1
+              --bench "nf" $ nf (A.sum) (fromLists' Par [[0,0,0,0,0],[0,1,2,3,4],[0,2,4,6,8]] :: Array U Ix2 Double)
+              --bench "whnf" $ whnf (charSetMPS) ps1
+            ]
+        ,
+          bgroup
+            "SP2"
+            [bench "nf" $ nf (charSetMSP) ps2
+              --bench "whnf" $ whnf (charSetMSP) ps2
+            ]
+        ,
+          bgroup
+            "PS2"
+            [bench "nf" $ nf (charSetMPS) ps2
+             -- bench "whnf" $ whnf (charSetMPS) ps2
+            ]
+         ,
+          bgroup
+            "SP3"
+            [bench "nf" $ nf (charSetMSP) ps3
+              --bench "whnf" $ whnf (charSetMSP) ps3
+            ]
+        ,
+          bgroup
+            "PS3"
+            [bench "nf" $ nf (charSetMPS) ps3
+              --bench "whnf" $ whnf (charSetMPS) ps3
+            ]
+        ,
+          bgroup
+            "SP4"
+            [bench "nf" $ nf (charSetMSP) ps4
+              --bench "whnf" $ whnf (charSetMSP) ps4
+            ]
+        ,
+          bgroup
+            "PS4"
+            [bench "nf" $ nf (charSetMPS) ps4
+             --bench "whnf" $ nf (charSetMPS) ps4
+            ]
+        ,
+          bgroup
+            "SP5"
+            [bench "nf" $ nf (charSetMSP) ps5
+             --bench "whnf" $ nf (charSetMSP) ps5
+            ]
+         ,
+          bgroup
+            "PS5"
+            [bench "nf" $ nf (charSetMPS) ps5
+             --bench "whnf" $ nf (charSetMPS) ps5
+            ]
+         ,
+          bgroup
+            "SP6"
+            [bench "nf" $ nf (charSetMSP) ps6
+             --bench "whnf" $ nf (charSetMSP) ps6
+            ]
+         ,
+          bgroup
+            "PS6"
+            [bench "nf" $ nf (charSetMPS) ps6
+             --bench "whnf" $ nf (charSetMPS) ps6
+            ]
+         ,
+          bgroup
+            "SP7"
+            [bench "nf" $ nf (charSetMSP) ps7
+             --bench "whnf" $ nf (charSetMSP) ps7
+            ]
+         ,
+          bgroup
+            "PS7"
+            [bench "nf" $ nf (charSetMPS) ps7
+             --bench "whnf" $ nf (charSetMPS) ps7
+            ]
+         ,
+          bgroup
+            "SP8"
+            [bench "nf" $ nf (charSetMSP) ps8
+             --bench "whnf" $ nf (charSetMSP) ps8
+            ]
+         ,
+          bgroup
+            "PS8"
+            [bench "nf" $ nf (charSetMPS) ps8
+             --bench "whnf" $ nf (charSetMPS) ps8
+            ]
+         ,
+          bgroup
+            "SP9"
+            [bench "nf" $ nf (charSetMSP) ps11
+             --bench "whnf" $ nf (charSetMSP) ps11
+           ]
+         ,
+          bgroup
+            "PS9"
+            [bench "nf" $ nf (charSetMPS) ps11
+             --bench "whnf" $ nf (charSetMPS) ps11
+            ]
+         ,
+          bgroup
+            "SP10"
+            [bench "nf" $ nf (charSetMSP) ps13
+             --bench "whnf" $ nf (charSetMPS) ps13
+            ]
+         ,
           bgroup
             "PS10"
             [bench "nf" $ nf (charSetMPS) ps13
              --bench "nf" $ nf (charSetMPS) ps13
             ]
-        --  ,
-          -- bgroup
-          --   "SP11"
-          --   [bench "nf" $ nf (charSetMSP) ps14
-          --    --bench "whnf" $ nf (charSetMPS) ps14
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS11"
-          --   [bench "nf" $ nf (charSetMPS) ps14
-          --    --bench "nf" $ nf (charSetMPS) ps14
-          --   ]
-        -- ,
-          -- bgroup
-          --   "SP12"
-          --   [bench "nf" $ nf (charSetMSP) ps15
-          --    --bench "whnf" $ nf (charSetMPS) ps15
-          --   ]
-        --  ,
-          -- bgroup
-          --   "PS12"
-          --   [bench "nf" $ nf (charSetMPS) ps15
-          --    --bench "nf" $ nf (charSetMPS) ps15
-          --   ]
+         ,
+          bgroup
+            "SP11"
+            [bench "nf" $ nf (charSetMSP) ps14
+             --bench "whnf" $ nf (charSetMPS) ps14
+            ]
+         ,
+          bgroup
+            "PS11"
+            [bench "nf" $ nf (charSetMPS) ps14
+             --bench "nf" $ nf (charSetMPS) ps14
+            ]
+        ,
+          bgroup
+            "SP12"
+            [bench "nf" $ nf (charSetMSP) ps15
+             --bench "whnf" $ nf (charSetMPS) ps15
+            ]
+         ,
+          bgroup
+            "PS12"
+            [bench "nf" $ nf (charSetMPS) ps15
+             --bench "nf" $ nf (charSetMPS) ps15
+            ]
 
         ]
     ]
