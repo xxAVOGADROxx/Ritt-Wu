@@ -143,9 +143,7 @@ main = do --putStrLn "Para usar los benchmar usar cabal new-bench"
    print $ charSetMPS ps1
   --charSetPfS pall
   --charSetPfPr pallR
-  --charSetNormalPS ps2
- 
-
+  charSetNormalPS ps2
 
 
 -- documentation: cabal haddock
