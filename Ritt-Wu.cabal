@@ -1,10 +1,4 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.31.1.
---
--- see: https://github.com/sol/hpack
---
--- hash: 4cc0561c5348e7e793df07bd56a8e30373c5664853c2f505a7cf6a1f9e64f2d0
+cabal-version: 3.4
 
 name:           Ritt-Wu
 version:        0.1.0.0
@@ -14,12 +8,12 @@ bug-reports:    https://github.com/githubuser/Ritt-Wu/issues
 author:         Jose Luis Seraquive Cuenca
 maintainer:     example@example.com
 copyright:      2019 Author name here
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
-    ChangeLog.md
+                  README.md
+                  ChangeLog.md
 
 source-repository head
   type: git
@@ -32,9 +26,9 @@ library
                   Polynomial.Polynomial
                   Polynomial.Wu
   other-modules:
-      Paths_Ritt_Wu
+                  Paths_Ritt_Wu
   hs-source-dirs:
-      src
+                  src
   build-depends:
                   base
                 , algebra

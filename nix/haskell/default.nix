@@ -12,5 +12,5 @@ let
 in
 {
   inherit ghc;
-  inherit (hsPkgs) cabal-install ghcide hlint ghcid;
+  inherit (hsPkgs) cabal-install hlint ghcid stylish-haskell haskell-language-server;
 }

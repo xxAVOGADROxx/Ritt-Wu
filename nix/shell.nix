@@ -11,8 +11,8 @@ pkgs.mkShell {
     haskell.cabal-install
     haskell.ghc
     haskell.ghcid
-    haskell.ghcide
     haskell.hlint
+    haskell.haskell-language-server
     pkgs.zlib
   ];
 

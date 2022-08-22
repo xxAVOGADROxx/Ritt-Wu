@@ -50,9 +50,9 @@ data Revlex = Revlex
 -- ----------------------<< FUNCTIONS >>--------------------
 -- | Monomial with terms
 m :: [Int] -> Mon ord
-m [] = Mon $ A.fromList (ParN 1) [] 
+m [] = Mon $ A.fromList (ParN 1) []
 m [0] = Mon $ A.fromList (ParN 1) [] --error "A empty term should be represented as m[]"
-m xs = Mon $ A.fromList (ParN 1) xs 
+m xs = Mon $ A.fromList (ParN 1) xs
 
 -- Function that recive the x_i position with the corresponding exp
 -- | Monomial with the term position
@@ -144,7 +144,7 @@ instance Group (Mon ord) where
 verificationMl :: Array P Ix1 Int -> Array P Ix1 Int -> Array P Ix1 Int
 verificationMl xs xz
   | xs == xz = xs
-  | otherwise = error "The monomial doesn't match " 
+  | otherwise = error "The monomial doesn't match "
 ---------------------------------------------------------------------------------------
   -- sujeto a revision cunado se realize la diviision
   -- polynomial, delay es el mas optimo porque no se realizan
@@ -156,7 +156,7 @@ verificationMl xs xz
 ---------------------------------------------------------------------------------------
 instance Ord (Mon Lex) where
   compare (Mon m)(Mon m') = on lex' A.toList m m'
-  (>) (Mon m)(Mon m')= on (P.>) A.toList m m' 
+  (>) (Mon m)(Mon m')= on (P.>) A.toList m m'
   (<) (Mon m)(Mon m')= on (P.<) A.toList m m'
 
 lex' :: (Num a, Eq a, Ord a) => [a] -> [a] -> Ordering
