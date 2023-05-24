@@ -1,10 +1,4 @@
-cabal-version: 1.12
-
--- This file has been generated from package.yaml by hpack version 0.31.1.
---
--- see: https://github.com/sol/hpack
---
--- hash: 4cc0561c5348e7e793df07bd56a8e30373c5664853c2f505a7cf6a1f9e64f2d0
+cabal-version: 3.4
 
 name:           Ritt-Wu
 version:        0.1.0.0
@@ -14,12 +8,12 @@ bug-reports:    https://github.com/githubuser/Ritt-Wu/issues
 author:         Jose Luis Seraquive Cuenca
 maintainer:     example@example.com
 copyright:      2019 Author name here
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    README.md
-    ChangeLog.md
+                  README.md
+                  ChangeLog.md
 
 source-repository head
   type: git
@@ -32,80 +26,71 @@ library
                   Polynomial.Polynomial
                   Polynomial.Wu
   other-modules:
-      Paths_Ritt_Wu
+                  Paths_Ritt_Wu
   hs-source-dirs:
-      src
+                  src
   build-depends:
-                          base >=4.7 && <5
-                , algebra -any
-                --, containers >= 0.6.0.1
-                -- , containers >= 0.6.0.1
-                , criterion -any
-                , deepseq >= 1.4.4.0
-                , massiv == 0.4.0.0
-                , scheduler >= 1.4.2
-                , sscript -any
-  default-language: Haskell2010
-
-executable Ritt-Wu-exe
-  main-is: Main.hs
-  other-modules:
-      Paths_Ritt_Wu
-  hs-source-dirs:
-      app
-  ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N -O2 -fprof-auto
-  build-depends:
-                          Ritt-Wu
+                  base
                 , algebra
-                , base >=4.7 && <5
-                --, containers >= 0.6.0.1
-                --, containers >= 0.6.0.1
                 , criterion
-                , deepseq >= 1.4.4.0
+                , deepseq
                 , massiv
-                , scheduler >= 1.4.2
+                , scheduler
                 , sscript
   default-language: Haskell2010
 
-test-suite Ritt-Wu-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_Ritt_Wu
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts  -fprof-auto "-with-rtsopts=-N -p -s -h -i0.1"
-  build-depends:
-                          Ritt-Wu
-                , base >=4.7 && <5
-                --, containers >= 0.6.0.1
-                 -- ,containers >= 0.6.0.1
-                , deepseq >= 1.4.4.0
-                , scheduler >= 1.4.2
-                , tasty
-                , tasty-hunit
-                , tasty-quickcheck
-                , tasty-smallcheck
-  default-language: Haskell2010
+-- executable Ritt-Wu-exe
+--   main-is: Main.hs
+--   other-modules:
+--       Paths_Ritt_Wu
+--   hs-source-dirs:
+--       app
+--   ghc-options:  -threaded -O2 -rtsopts -eventlog   -fprof-auto  "-with-rtsopts=-N -s -h -i0.1"
+--   build-depends:
+--                           Ritt-Wu
+--                 , algebra
+--                 , base
+--                 , criterion
+--                 , deepseq
+--                 , massiv
+--                 , scheduler
+--                 , sscript
+--   default-language: Haskell2010
 
-benchmark Ritt-Wu-benchmark
- type: exitcode-stdio-1.0
- hs-source-dirs: bench
- main-is:             Benchmarking.hs
- other-modules:
-      Paths_Ritt_Wu
- ghc-options:  -threaded -Wall -fprof-auto "-with-rtsopts=-N -p -s -h -i0.1"  -rtsopts   -freverse-errors -O2  -eventlog
- build-depends:
-                         Ritt-Wu
-               , algebra
-               , base >=4.7 && <5
-               --, containers >= 0.6.0.1
-               --, containers >= 0.6.0.1
-               , criterion
-               , deepseq >= 1.4.4.0
-               , massiv
-               , scheduler >= 1.4.2
-               , sscript
+-- test-suite Ritt-Wu-test
+--   type: exitcode-stdio-1.0
+--   main-is: Spec.hs
+--   other-modules:
+--       Paths_Ritt_Wu
+--   hs-source-dirs:
+--       test
+--   ghc-options: -threaded -rtsopts  -fprof-auto
+--   build-depends:
+--                   Ritt-Wu
+--                 , base
+--                 , deepseq
+--                 , scheduler
+--                 , tasty
+--                 , tasty-hunit
+--                 , tasty-quickcheck
+--                 , tasty-smallcheck
+--   default-language: Haskell2010
+
+-- benchmark Ritt-Wu-benchmark
+--  type: exitcode-stdio-1.0
+--  hs-source-dirs: bench
+--  main-is:             Benchmarking.hs
+--  other-modules:
+--       Paths_Ritt_Wu
+--  ghc-options:  -threaded -O2 "-with-rtsopts=-N -s "
+--  build-depends:
+--                          Ritt-Wu
+--                , algebra
+--                , base
+--                , criterion
+--                , deepseq
+--                , massiv
+--                , scheduler
+--                , sscript
+
  default-language: Haskell2010
-                                                    
-                          
