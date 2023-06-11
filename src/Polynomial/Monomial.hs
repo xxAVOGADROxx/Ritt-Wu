@@ -109,7 +109,7 @@ aux (x:xs) (y:yp) = x P.+ y : aux xs yp
 quitZero :: [Int] -> [Int]
 quitZero [] = []
 quitZero xs
-  | last xs == 0 = quitZero $ init xs
+  | last xs == 0 = quitZero $ P.init xs
   | otherwise = xs
 ---------------------------------------------------------------------------------------
 instance Division (Mon ord) where

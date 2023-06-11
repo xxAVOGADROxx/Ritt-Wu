@@ -4,7 +4,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Polynomial.Terms
-  -- * Types
   ( Term(..)
   ) where
 import Prelude as P
@@ -32,7 +31,7 @@ instance (Num k, Show k, Eq k) => Show (Term k ord) where
   show xs = showMon xs
 
 showMon :: (Num k, Show k, Eq k) => Term k ord -> String
-showMon (Term k mon) 
+showMon (Term k mon)
   | mon == zero = show k
   | otherwise = (formatSS . show) k ++ show mon
 
@@ -79,7 +78,7 @@ subPol' (Term k mon) (Term k' mon') = Term (k P.- k')( mon N.- mon')
 
 -------------------------------------------------------------------------------
 --instance Eq (Term k ord) where
---  (==) = 
+--  (==) =
 -- instance (Eq k)=> Ord (Term k Lex) where
 --   compare = on compare (snd . getT)
 --   (<) = on (P.<) (snd . getT)
@@ -94,4 +93,4 @@ subPol' (Term k mon) (Term k' mon') = Term (k P.- k')( mon N.- mon')
 instance (Eq k)=> Ord (Term k Revlex) where
   compare (Term k mon)(Term k' mon') = compare mon mon'
   (<) (Term k mon)(Term k' mon') = (P.<) mon mon'
-  (>) (Term k mon)(Term k' mon') = (P.>) mon mon'  
+  (>) (Term k mon)(Term k' mon') = (P.>) mon mon'

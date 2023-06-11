@@ -54,7 +54,7 @@ import GHC.Generics (Generic, Generic1)
 data  Idp t ord = Idp !(Poly t ord) !Int deriving (Eq, Generic)
 newtype PS t ord = PS (Array N Ix1 (Idp t ord )) deriving (Eq,Generic, NFData)
 
-instance (NFData t) =>  NFData (Idp t ord) where 
+instance (NFData t) =>  NFData (Idp t ord) where
   rnf (Idp t ord) = rnf t `deepseq` rnf ord `deepseq` ()
 
 -- polynomial id
@@ -74,7 +74,7 @@ t k mon = Term k $ m mon
 tp :: k -> [Int] -> [Int] -> Term k ord
 tp k mon mon' = Term k $ mp mon mon'
 
---parallel forma of a polynomial set 
+--parallel forma of a polynomial set
 parps :: (NFData t) =>[Poly t ord] -> PS t ord
 parps xs = ps $ P.map idp xs
 
@@ -110,7 +110,7 @@ searchPolyClass (PS ps) = PS $ A.computeAs N (A.map f ps)
 sortGrupPolyClass :: (NFData t, Eq t) => PS t ord -> PS t ord
 sortGrupPolyClass (PS xs) = PS conversion
   where
-    conversion =  A.quicksort xs 
+    conversion =  A.quicksort xs
 
 instance (NFData t, Eq t) => Ord (Idp t ord) where
   compare (Idp poly id)(Idp poly' id') = compare id id'
@@ -167,13 +167,13 @@ groupClass (PS poly) = groupBy (on (==) f) $ A.toList poly
   where
     f (Idp pol id) = id
 
-sPLRR :: (NFData t, Num t, Eq t) => [[Idp t Revlex]] -> [Idp t Revlex] -> PS t Revlex 
+sPLRR :: (NFData t, Num t, Eq t) => [[Idp t Revlex]] -> [Idp t Revlex] -> PS t Revlex
 sPLRR (x:xs) [] = sPLRR xs [head $ lDPolys x]
 sPLRR [] xp = ps xp
-sPLRR xs xp 
+sPLRR xs xp
   | f (head xp) == 0 = error "Contradictory AS There is (are) constant inside the polynomial set"
-  | h  /= z = sPLRR (tail xs) (h : xp)
-  | otherwise = sPLRR (tail xs) xp
+  | h  /= z = sPLRR (P.tail xs) (h : xp)
+  | otherwise = sPLRR (P.tail xs) xp
   where
     f(Idp poly id) = class' poly
     g = lDPolys . head
@@ -183,7 +183,7 @@ sPLRR xs xp
 -- check if a given polynomial is reduced with respect to a set
 reducedP :: (NFData t, Num t, Eq t)=> [Idp t Revlex] -> Idp t Revlex -> Idp t Revlex
 reducedP [] _ = idp (p[])
-reducedP (x:xs) z 
+reducedP (x:xs) z
   | isReduced x z  = x
   | otherwise = reducedP xs z
 -----------------------------------------------------------------
@@ -191,13 +191,12 @@ reducedP (x:xs) z
 -- give two polyomials a b check if a is reduced to b
 isReduced :: (NFData t, Eq t, Num t) => Idp t Revlex -> Idp t Revlex -> Bool
 isReduced (Idp poly id) (Idp poly' id')
- -- | degP poly (class' poly') P.< degP poly' (class' poly') = True
   | prem poly poly' == poly = True
   | otherwise = False
 -- -----------------------------------------------------------------
 -- compare the degree of two polynomials in a given variable
 degP ::(NFData t ) => Poly t Revlex -> Int -> Int
-degP ( Poly poly) cls = A.maximum' .  A.map h . A.computeAs N . A.filterS (\x -> f x >= cls) $  poly
+degP ( Poly poly) cls = A.maximum' .  A.map h . A.computeAs N . A.sfilter (\x -> f x >= cls) $  poly
   where
     f(Term k mon) = A.elemsCount (g mon)
     g(Mon m) = m
@@ -206,7 +205,7 @@ degP ( Poly poly) cls = A.maximum' .  A.map h . A.computeAs N . A.filterS (\x ->
 ----------------------------------------------------------------------------------------------------
 --search the polynomial (S) with lower degree in a list of polynomials with the same class
 lDPolys :: (NFData t) => [Idp t Revlex]-> [Idp t Revlex]
-lDPolys xs = head $ groupBy (on (==) i) (sortBy (on compare i) f) 
+lDPolys xs = head $ groupBy (on (==) i) (sortBy (on compare i) f)
   where
     f = L.map g xs
     g (Idp poly id) = Idp poly (ld poly)
@@ -214,7 +213,7 @@ lDPolys xs = head $ groupBy (on (==) i) (sortBy (on compare i) f)
 
 -----------------------------------------------------------------------------
 quitEmptyPoly :: (NFData t, Eq t) =>  PS t Revlex -> PS t Revlex
-quitEmptyPoly (PS pol)= PS $ A.computeAs N $ ( A.filterS (\x -> x /= f) pol)
+quitEmptyPoly (PS pol)= PS $ A.computeAs N $ ( A.sfilter (\x -> x /= f) pol)
   where
     f = idp $ p[]
 ----------------------------------------------------------------------------
@@ -274,7 +273,7 @@ basicSet xs =  sPLRR classify []
 -- ----- *****************************-----------------------
 -- begin: char Set parallel division PS
 --characteristic set in parallel computation using pseudo remainder
-charSetMPS :: (NFData t, Eq t, Num t) => PS t Revlex -> PS t Revlex 
+charSetMPS :: (NFData t, Eq t, Num t) => PS t Revlex -> PS t Revlex
 charSetMPS ps
   | bs == ps = ps
   | rs == ps' = bs
@@ -308,7 +307,7 @@ psBsUParP (PS ps) (bs) = PS $ A.computeAs N $ A.map (`sprem` bs) ps
 --end : char Ser parallel division PS--------------------------------------------------------------------------------------------------
 
 --begin: characteristic set Parallel division Spoly
-charSetMSP :: (NFData t, Fractional t , Ord t, Eq t, Num t) => PS t Revlex -> PS t Revlex 
+charSetMSP :: (NFData t, Fractional t , Ord t, Eq t, Num t) => PS t Revlex -> PS t Revlex
 charSetMSP ps
   | bs == ps = ps
   | rs == ps' = bs
@@ -375,7 +374,7 @@ psBsUParS (PS ps) (bs) = PS $ A.computeAs N $ A.map (`sspoly` bs) ps
 -- psBsSParS ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 -- psBsSParS ps bs = traverseConcurrently Par (\p -> p `deepseq` pure p) [sspoly  x bs | x <- ps] :: IO [Poly Rational Revlex]
 
--- -- sequential division pure IO 
+-- -- sequential division pure IO
 -- psBsSSeqP ::  [Poly Rational Revlex] -> [Poly Rational Revlex] -> IO[Poly Rational Revlex]
 -- psBsSSeqP ps bs = traverseConcurrently Seq (\p -> p `deepseq` pure p) [sprem  x bs | x <- ps] :: IO [Poly Rational Revlex]
 

@@ -88,7 +88,7 @@ ld p@(Poly xp) =  A.maximum' . findingLast  $ A.computeAs N predicate
     g (Mon m) = m
     f (Term k mon) =  A.elemsCount (g mon)
     -- h (Term k mon) = A.toList   (g mon)
-    predicate = A.filterS (\x -> (f x) == class' p)  xp
+    predicate = A.sfilter (\x -> (f x) == class' p)  xp
     k (Term k mon) = if elemsCount (g mon) /= 0 then  g mon ! ((elemsCount (g mon)) P.-1) else 0
     findingLast = A.map k
 
@@ -121,20 +121,20 @@ ld p@(Poly xp) =  A.maximum' . findingLast  $ A.computeAs N predicate
 lt :: (NFData t, Eq t) => Poly t Revlex -> Term t Revlex
 lt poly@(Poly terms)= h . i . computeAs N $  fil terms
   where
-    fil = A.filterS (\x -> f x == ld poly)
+    fil = A.sfilter (\x -> f x == ld poly)
     g (Mon m) = m
     f (Term k mon) = if elemsCount (g mon) /= 0 then  g mon ! (elemsCount (g mon) P.-1) else 0
     i = A.quicksort
     h = head . A.toList
 
-varDegree :: (NFData t, Eq t) => Poly t Revlex -> Int -> Int 
+varDegree :: (NFData t, Eq t) => Poly t Revlex -> Int -> Int
 varDegree (Poly terms ) n = maxel . A.map takeEl . computeAs N $ fil terms
   where
-    fil = A.filterS (\x -> f x >= n)
+    fil = A.sfilter (\x -> f x >= n)
     g (Mon m) = m
     f (Term k mon) = if elemsCount (g mon) /= 0 then  elemsCount (g mon) else 0
     maxel = maximum'
-    takeEl (Term k mon) = g mon ! (n P.- 1) 
+    takeEl (Term k mon) = g mon ! (n P.- 1)
 
 -- lmMax' :: (Eq t )=>[Term t Revlex] -> Term t Revlex
 -- lmMax' [x] = x
@@ -154,7 +154,7 @@ varDegree (Poly terms ) n = maxel . A.map takeEl . computeAs N $ fil terms
 initOfv :: (NFData t, Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv p@(Poly xp) = Poly $ A.computeAs N (A.map takeInit (A.computeAs N predicate))
   where
-    predicate =  A.filterS (\x -> f x == class' p && h x == ld p) xp
+    predicate =  A.sfilter (\x -> f x == class' p && h x == ld p) xp
     f (Term k mon) = A.elemsCount (g mon)
     g (Mon m) = m
     h (Term k mon) =  g mon ! (A.elemsCount (g mon) P.- 1 )
@@ -162,14 +162,14 @@ initOfv p@(Poly xp) = Poly $ A.computeAs N (A.map takeInit (A.computeAs N predic
 takeInit :: Term t ord -> Term t ord
 takeInit (Term k mod)
   | A.elemsCount (g mod)  == 1 = Term k $ m[]
-  | otherwise = Term k $ Mon ( A.computeAs P ( A.takeS (Sz (A.elemsCount (g mod)) P.- 1 ) (g mod) ))
+  | otherwise = Term k $ Mon ( A.computeAs P ( A.take (Sz (A.elemsCount (g mod)) P.- 1 ) (g mod) ))
   where
     g (Mon m) = m
 
 initOfv' :: (NFData t, Eq t) => Poly t Revlex -> Poly t Revlex
 initOfv' p@(Poly xp) = Poly $  (A.computeAs N predicate)
   where
-    predicate =  A.filterS (\x -> f x == class' p && h x == ld p) xp
+    predicate =  A.sfilter (\x -> f x == class' p && h x == ld p) xp
     f (Term k mon) = A.elemsCount (g mon)
     g (Mon m) = m
     h (Term k mon) =  g mon ! (A.elemsCount (g mon) P.- 1 )
@@ -260,7 +260,7 @@ basicSpoly f g = simP x'  (initOfv' f)  f N.- simP x' (initOfv' g)  g
 --length (getP f) P.> 1 && length (getP g) P.> 1 = [ withoutFactor f, withoutFactor g,  Poly[lcmT (factor f) (factor g)] ]
 
 simP :: (NFData t, Fractional t, Num t, Eq t ) => [Poly t Revlex]->Poly t Revlex->Poly t Revlex->Poly t Revlex
-simP f1 f2 f3 
+simP f1 f2 f3
   | length f1 == 3 = listElimination f1 f2 f3
   | (orden . head $ f1) == orden f2 = f3 --si
   | orden f3 == orden f2 =   head f1   --si
@@ -402,4 +402,3 @@ totalDeg (Poly p) = A.maximum' $ A.map (f) p
 -- Contador de terminos en un polinomio
 numTerms :: (NFData t) => Poly t Revlex -> Int
 numTerms (Poly p) = A.elemsCount p
-
